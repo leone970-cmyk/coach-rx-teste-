@@ -449,7 +449,7 @@ function ExItem({ex,note,prs,onNote,isCoach,onEdit,onRemove}){
   );
 }
 
-function SessaoBlock({ss,exs,db,update,prs,isCoach}){
+function SessaoBlock({ss,exs,db,update,prs,isCoach,diaId,idx,total,onMover,onDeletar}){
   const faseKey=`ss_fase_${ss.id}`;
   const regKey=`ss_reg_${ss.id}`;
   const fase=db.notes[faseKey]||"idle";
@@ -458,6 +458,8 @@ function SessaoBlock({ss,exs,db,update,prs,isCoach}){
   const [showDesc,setShowDesc]=useState(false);
   const [editDesc,setEditDesc]=useState(false);
   const [novaDesc,setNovaDesc]=useState(ss.desc||"");
+  const [editNome,setEditNome]=useState(false);
+  const [novoNome,setNovoNome]=useState(ss.nome||"");
   const [addEx,setAddEx]=useState(false);
   const [exNome,setExNome]=useState("");const [exSub,setExSub]=useState("");
   const [exTimer,setExTimer]=useState("");const [exNote,setExNote]=useState(true);
@@ -468,6 +470,7 @@ function SessaoBlock({ss,exs,db,update,prs,isCoach}){
   const salvar=()=>{update(d=>{d.notes[regKey]=JSON.stringify({tempo,calorias:cal,distancia:dist,rpe,obs});d.notes[faseKey]="feito";d.done[`ss_done_${ss.id}`]=true;});};
   const desfazer=()=>{update(d=>{d.notes[faseKey]="idle";d.done[`ss_done_${ss.id}`]=false;delete d.notes[regKey];});setTempo("");setCal("");setDist("");setRpe("");setObs("");};
   const salvarDesc=()=>{update(d=>{Object.values(d.sessoes).forEach(arr=>arr.forEach(s=>{if(s.id===ss.id)s.desc=novaDesc;}));});setEditDesc(false);};
+  const salvarNome=()=>{if(!novoNome.trim())return;update(d=>{if(d.sessoes[diaId]){const s=d.sessoes[diaId].find(x=>x.id===ss.id);if(s)s.nome=novoNome.trim();}});setEditNome(false);};
   const editarEx=(exId,campo,valor)=>{update(d=>{const lista=d.exercicios[ss.id]||[];const ex=lista.find(e=>e.id===exId);if(ex)ex[campo]=valor;});};
   const removerEx=(exId)=>{update(d=>{d.exercicios[ss.id]=(d.exercicios[ss.id]||[]).filter(e=>e.id!==exId);});};
   const adicionarEx=()=>{if(!exNome.trim())return;const novo={id:uid(),nome:exNome.trim(),sub:exSub.trim(),timer:parseInt(exTimer)||0,note:exNote,rest:false};update(d=>{if(!d.exercicios[ss.id])d.exercicios[ss.id]=[];d.exercicios[ss.id].push(novo);});setExNome("");setExSub("");setExTimer("");setExNote(true);setAddEx(false);};
@@ -476,17 +479,35 @@ function SessaoBlock({ss,exs,db,update,prs,isCoach}){
     <div style={{borderBottom:"1px solid #f0f0ee"}}>
       <div style={{padding:"12px 14px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
         <div style={{flex:1,minWidth:0}}>
-          <span style={{fontSize:14,fontWeight:600}}>{ss.nome}</span>
-          {feito&&!isCoach&&<span style={{marginLeft:8,fontSize:11,color:"#2a7a4b",fontWeight:700}}>Concluido ✓</span>}
-          {isCoach&&<span style={{marginLeft:8,fontSize:10,color:"#ccc"}}>ID: {ss.id}</span>}
+          {isCoach&&editNome?(
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <input value={novoNome} onChange={e=>setNovoNome(e.target.value)} style={{...INP,fontSize:14,fontWeight:600,padding:"5px 8px",flex:1}} autoFocus onKeyDown={e=>{if(e.key==="Enter")salvarNome();if(e.key==="Escape")setEditNome(false);}}/>
+              <button onClick={salvarNome} style={{padding:"5px 10px",fontSize:12,borderRadius:7,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button>
+              <button onClick={()=>setEditNome(false)} style={{padding:"5px 8px",fontSize:12,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>✕</button>
+            </div>
+          ):(
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:14,fontWeight:600,cursor:isCoach?"pointer":"default"}} onClick={()=>{if(isCoach){setNovoNome(ss.nome);setEditNome(true);}}}>{ss.nome}</span>
+              {feito&&!isCoach&&<span style={{fontSize:11,color:"#2a7a4b",fontWeight:700}}>✓</span>}
+            </div>
+          )}
+          {isCoach&&!editNome&&<span style={{fontSize:10,color:"#ccc"}}>ID: {ss.id}</span>}
         </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+          {/* COACH: mover + deletar */}
+          {isCoach&&(
+            <>
+              <button onClick={()=>onMover(idx,-1)} disabled={idx===0} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===0?"#ddd":"#555",cursor:idx===0?"default":"pointer"}}>↑</button>
+              <button onClick={()=>onMover(idx,1)} disabled={idx===total-1} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===total-1?"#ddd":"#555",cursor:idx===total-1?"default":"pointer"}}>↓</button>
+              <button onClick={()=>{if(window.confirm(`Deletar sessao "${ss.nome}"?`))onDeletar(ss.id);}} style={{padding:"4px 8px",fontSize:12,borderRadius:7,border:"1px solid #fcc",background:"#fff8f8",color:"#c00",cursor:"pointer"}}>🗑</button>
+              <button onClick={()=>{setNovaDesc(ss.desc||"");setEditDesc(v=>!v);}} style={{padding:"5px 10px",fontSize:12,borderRadius:7,border:"1px solid #f0d080",background:editDesc?"#fffbf0":"#fff",color:"#a07800",cursor:"pointer",fontWeight:600}}>{editDesc?"✕":"✏️ Desc"}</button>
+            </>
+          )}
           {!isCoach&&linhas.length>0&&<button onClick={()=>setShowDesc(v=>!v)} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#f5f5f3",color:"#666",cursor:"pointer"}}>{showDesc?"▲":"▼ Ver"}</button>}
           {!isCoach&&fase==="idle"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 16px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>Iniciar</button>}
           {!isCoach&&fase==="ativa"&&<button onClick={()=>setFase("concluindo")} style={{padding:"7px 14px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#2a7a4b",color:"#fff",cursor:"pointer"}}>Concluir ✓</button>}
           {!isCoach&&fase==="concluindo"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 12px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>Voltar</button>}
           {!isCoach&&feito&&<button onClick={()=>setFase("concluindo")} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #b5dcc7",background:"#edf7f2",color:"#2a7a4b",cursor:"pointer",fontWeight:600}}>Log</button>}
-          {isCoach&&<button onClick={()=>{setNovaDesc(ss.desc||"");setEditDesc(v=>!v);}} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #f0d080",background:editDesc?"#fffbf0":"#fff",color:"#a07800",cursor:"pointer",fontWeight:600}}>{editDesc?"✕ Fechar":"✏️ Desc"}</button>}
         </div>
       </div>
       {!isCoach&&showDesc&&linhas.length>0&&(
@@ -570,13 +591,43 @@ function TreinosTab({db,update,isCoach}){
   const [selAluno,setSelAluno]=useState(db.alunos[0]?.id);
   const [selSemana,setSelSemana]=useState((db.semanas[db.alunos[0]?.id]||[])[0]?.id||null);
   const [selDia,setSelDia]=useState(null);
+  const [addSessao,setAddSessao]=useState(null); // diaId sendo editado
+  const [ssNome,setSsNome]=useState("");
+  const [ssDesc,setSsDesc]=useState("");
   const dias=selSemana?db.dias[selSemana]||[]:[];
   const getProg=dId=>{const sss=db.sessoes[dId]||[];return{t:sss.length,d:sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length};};
   const prs=db.prs?.[selAluno]||{};
   const semAtual=db.semanas[selAluno]?.find(s=>(db.dias[s.id]||[]).some(d=>d.id===selDia));
+
+  const adicionarSessao=(diaId)=>{
+    if(!ssNome.trim())return;
+    const novoId=uid();
+    update(d=>{
+      if(!d.sessoes[diaId])d.sessoes[diaId]=[];
+      d.sessoes[diaId].push({id:novoId,nome:ssNome.trim(),desc:ssDesc.trim()||undefined});
+      if(!d.exercicios[novoId])d.exercicios[novoId]=[];
+    });
+    setSsNome("");setSsDesc("");setAddSessao(null);
+  };
+
+  const moverSessao=(diaId,idx,dir)=>{
+    update(d=>{
+      const arr=d.sessoes[diaId]||[];
+      const novo=idx+dir;
+      if(novo<0||novo>=arr.length)return;
+      [arr[idx],arr[novo]]=[arr[novo],arr[idx]];
+    });
+  };
+
+  const deletarSessao=(diaId,ssId)=>{
+    update(d=>{
+      d.sessoes[diaId]=(d.sessoes[diaId]||[]).filter(s=>s.id!==ssId);
+    });
+  };
+
   return(
     <div>
-      {isCoach&&<div style={{background:"#fffbf0",border:"1px solid #f0d080",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>✏️</span><span style={{fontSize:12,color:"#8a6a00"}}>Modo Coach ativo — voce pode editar descricoes e exercicios de cada sessao abaixo.</span></div>}
+      {isCoach&&<div style={{background:"#fffbf0",border:"1px solid #f0d080",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>✏️</span><span style={{fontSize:12,color:"#8a6a00"}}>Modo Coach — clique no nome da sessao para renomear. Use ↑↓ para reordenar e 🗑 para deletar.</span></div>}
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>{db.alunos.map(a=>(<Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>{setSelAluno(a.id);setSelSemana((db.semanas[a.id]||[])[0]?.id||null);setSelDia(null);}}/>))}</div>
       <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{(db.semanas[selAluno]||[]).map(s=>(<Pill key={s.id} label={s.nome} active={selSemana===s.id} onClick={()=>{setSelSemana(s.id);setSelDia(null);}}/>))}</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -599,7 +650,33 @@ function TreinosTab({db,update,isCoach}){
                 <div>
                   {semAtual?.obs&&<div style={{padding:"8px 14px",background:"#fffbf0",borderBottom:"1px solid #f0e8c0",display:"flex",gap:8,alignItems:"center"}}><span>📋</span><span style={{fontSize:12,color:"#8a6a00"}}>{semAtual.obs}</span></div>}
                   {!isCoach&&dn===t&&t>0&&<div style={{padding:"10px 14px",background:"#edf7f2",display:"flex",gap:8,alignItems:"center",borderBottom:"1px solid #c8ead4"}}><span style={{fontSize:16}}>🎉</span><span style={{fontSize:13,fontWeight:600,color:"#2a7a4b"}}>Treino do dia concluido!</span></div>}
-                  {sessoes.map(ss=>(<SessaoBlock key={ss.id} ss={ss} exs={db.exercicios[ss.id]||[]} db={db} update={update} prs={prs} isCoach={isCoach}/>))}
+                  {sessoes.map((ss,idx)=>(
+                    <SessaoBlock key={ss.id} ss={ss} exs={db.exercicios[ss.id]||[]} db={db} update={update} prs={prs} isCoach={isCoach}
+                      diaId={d.id} idx={idx} total={sessoes.length}
+                      onMover={(i,dir)=>moverSessao(d.id,i,dir)}
+                      onDeletar={(ssId)=>deletarSessao(d.id,ssId)}
+                    />
+                  ))}
+                  {/* COACH: adicionar nova sessão */}
+                  {isCoach&&(
+                    <div style={{padding:"10px 14px 14px"}}>
+                      {addSessao===d.id?(
+                        <div style={{background:"#f0f7ff",border:"1px solid #b0d0f0",borderRadius:12,padding:"14px 12px"}}>
+                          <div style={{fontSize:12,fontWeight:700,color:"#1a5a90",marginBottom:10,textTransform:"uppercase",letterSpacing:".05em"}}>Nova Sessao</div>
+                          <Field label="Nome da sessao"><input style={INP} value={ssNome} onChange={e=>setSsNome(e.target.value)} placeholder="Ex: Wall Ball — For Time" autoFocus onKeyDown={e=>{if(e.key==="Enter")adicionarSessao(d.id);}}/></Field>
+                          <Field label="Descricao (opcional)"><textarea style={{...INP,height:80,resize:"none"}} value={ssDesc} onChange={e=>setSsDesc(e.target.value)} placeholder="Descreva o treino..."/></Field>
+                          <div style={{display:"flex",gap:8}}>
+                            <button style={BTNCANCEL} onClick={()=>{setAddSessao(null);setSsNome("");setSsDesc("");}}>Cancelar</button>
+                            <button style={BTNOK} onClick={()=>adicionarSessao(d.id)}>+ Criar sessao</button>
+                          </div>
+                        </div>
+                      ):(
+                        <button onClick={()=>{setAddSessao(d.id);setSsNome("");setSsDesc("");}} style={{width:"100%",padding:"10px 0",fontSize:13,fontWeight:600,borderRadius:10,border:"1.5px dashed #90c0f0",background:"#f0f7ff",color:"#1a5a90",cursor:"pointer"}}>
+                          + Nova sessao
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
