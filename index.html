@@ -637,7 +637,7 @@ function TreinosTab({db,update,isCoach}){
           const aberto=selDia===d.id;
           const sessoes=db.sessoes[d.id]||[];
           return(
-            <div key={d.id} style={{background:"#fff",border:aberto?"2px solid #1a1a1a":"1px solid #e8e8e5",borderRadius:14,overflow:"hidden"}}>
+            <div key={d.id} style={{background:"#fff",border:aberto?"2px solid #1a1a1a":"1px solid #e8e8e5",borderRadius:14}}>
               <div onClick={()=>setSelDia(aberto?null:d.id)} style={{padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
                 <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700}}>{d.nome}</div>{d.foco&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{d.foco}</div>}</div>
                 <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
@@ -645,7 +645,7 @@ function TreinosTab({db,update,isCoach}){
                   <div style={{fontSize:16,color:"#bbb",transition:"transform .2s",transform:aberto?"rotate(180deg)":"none"}}>▾</div>
                 </div>
               </div>
-              <div style={{height:3,background:"#f0f0ee"}}><div style={{height:"100%",width:`${pct}%`,background:"#2a7a4b",transition:"width .3s"}}/></div>
+              <div style={{height:3,background:"#f0f0ee",borderRadius:"0 0 0 0"}}><div style={{height:"100%",width:`${pct}%`,background:"#2a7a4b",transition:"width .3s",borderRadius:aberto?"0":"0 0 12px 12px"}}/></div>
               {aberto&&(
                 <div>
                   {semAtual?.obs&&<div style={{padding:"8px 14px",background:"#fffbf0",borderBottom:"1px solid #f0e8c0",display:"flex",gap:8,alignItems:"center"}}><span>📋</span><span style={{fontSize:12,color:"#8a6a00"}}>{semAtual.obs}</span></div>}
