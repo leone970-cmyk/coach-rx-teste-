@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-  <title>Coach RX</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;}
-    input,textarea,select,button{font-family:inherit;}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Coach RX</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;}
+input,textarea,select,button{font-family:inherit;}
+</style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useRef, useCallback, useEffect } = React;
+const {useState,useRef,useCallback,useEffect}=React;
+const uid=()=>"id_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+const fmtMMSS=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
+const fmtTime=s=>{const m=Math.floor(s/60),r=s%60;return m>0?`${m}:${String(r).padStart(2,"0")}`:`${r}s`;};
+const toSec=(m,s)=>parseInt(m||0)*60+parseInt(s||0);
+const round25=v=>Math.round(v/2.5)*2.5;
 
-// ─── SEED ────────────────────────────────────────────────────────
-const SEED = {
+const INP={width:"100%",fontSize:15,padding:"10px 12px",border:"1px solid #e0e0dc",borderRadius:10,background:"#fff",color:"#1a1a1a",outline:"none",WebkitAppearance:"none",boxSizing:"border-box"};
+const BTNCANCEL={flex:1,padding:13,fontSize:15,borderRadius:10,border:"1px solid #e0e0dc",background:"#fff",color:"#1a1a1a",cursor:"pointer",fontWeight:500};
+const BTNOK={flex:1,padding:13,fontSize:15,borderRadius:10,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer",fontWeight:600};
+const CARD={background:"#fff",border:"1px solid #e8e8e5",borderRadius:14,padding:"14px 16px",marginBottom:12};
+
+const SEED={
   alunos:[
     {id:"camila01",nome:"Camila",objetivo:"Podio"},
     {id:"kenny01",nome:"Kenny",objetivo:""},
@@ -27,13 +36,10 @@ const SEED = {
     {id:"darfine01",nome:"Darfine",objetivo:""},
   ],
   semanas:{
-    camila01:[
-      {id:"sem01",nome:"Semana 1",obs:"Testes de base"},
-      {id:"sem02",nome:"Semana 2",obs:"Volume especifico — simulado atualizado"},
-    ],
-    kenny01:[{id:"sem02k",nome:"Semana 2",obs:"Volume especifico — simulado atualizado"}],
-    thiago01:[{id:"sem02t",nome:"Semana 2",obs:"Volume especifico — simulado atualizado"}],
-    darfine01:[{id:"sem02d",nome:"Semana 2",obs:"Volume especifico — simulado atualizado"}],
+    camila01:[{id:"sem01",nome:"Semana 1",obs:"Testes de base"},{id:"sem02",nome:"Semana 2",obs:"Volume especifico"}],
+    kenny01:[{id:"sem02k",nome:"Semana 2",obs:"Volume especifico"}],
+    thiago01:[{id:"sem02t",nome:"Semana 2",obs:"Volume especifico"}],
+    darfine01:[{id:"sem02d",nome:"Semana 2",obs:"Volume especifico"}],
   },
   dias:{
     sem01:[
@@ -85,313 +91,162 @@ const SEED = {
     d05:[{id:"s12",nome:"Remo — volume"},{id:"s13",nome:"Potencia — 5 rounds"}],
     d06:[{id:"s15",nome:"EMOM 30 min"},{id:"s16",nome:"Wall Ball extra"}],
     w2d01:[
-      {id:"w2s01",nome:"Aquecimento",desc:"Corrida trote leve 10 min.\nRitmo confortavel, RPE 3-4.\nObjetivo: ativar sistema cardiovascular e soltar articulacoes antes do simulado."},
-      {id:"w2s02",nome:"Parte Principal — Preparacao para Simulado",desc:"5 blocos com rest de 2 min entre cada um.\nRest de 10 min ao final antes da saideira.\n\nBloco 1\n300m corrida\n2 min SkiErg no pace dos 2km\n200m corrida\nRest 2 min\n\nBloco 2\n300m corrida\n25m Sled Push unbroken\n200m corrida\nRest 2 min\n\nBloco 3\n300m corrida\n25m Sled Pull unbroken\n200m corrida\nRest 2 min\n\nBloco 4\n300m corrida\n40m Burpee Broad Jump cadenciado unbroken\n200m corrida\nRest 2 min\n\nBloco 5\n300m corrida\n2 min Remo no pace dos 2km\n200m corrida\nRest 10 min"},
-      {id:"w2s03",nome:"Saideira — For Time (Time Cap 7 min)",desc:"Wall Ball — 150 reps\nPeso oficial de prova.\nCompletar dentro de 7 minutos.\nEstrategia sugerida: 30-25-25-20-20 ou conforme capacidade."},
-      {id:"w2s04",nome:"Core — 3 Rounds",desc:"V-up — 20 reps\nL-sit Hell Over — 15 reps cada lado\nPrancha — 30 segundos\n\nSem rest prescrito entre exercicios.\nRest entre rounds a criterio."},
+      {id:"w2s01",nome:"Aquecimento",desc:"Corrida trote leve 10 min.\nRitmo confortavel, RPE 3-4."},
+      {id:"w2s02",nome:"Parte Principal — Preparacao para Simulado",desc:"5 blocos com rest de 2 min.\n\nBloco 1\n300m corrida + 2min SkiErg + 200m corrida\n\nBloco 2\n300m corrida + 25m Sled Push + 200m corrida\n\nBloco 3\n300m corrida + 25m Sled Pull + 200m corrida\n\nBloco 4\n300m corrida + 40m Burpee Broad Jump + 200m corrida\n\nBloco 5\n300m corrida + 2min Remo + 200m corrida\nRest 10 min"},
+      {id:"w2s03",nome:"Saideira — For Time (Time Cap 7 min)",desc:"Wall Ball — 150 reps\nPeso oficial de prova.\nEstrategia: 30-25-25-20-20"},
+      {id:"w2s04",nome:"Core — 3 Rounds",desc:"V-up 20 reps\nL-sit Hell Over 15 reps cada lado\nPrancha 30s"},
     ],
     w2d02:[
-      {id:"w2s05",nome:"Treino 1 — Corrida do Kenny",desc:"Volume e estrutura conforme protocolo Kenny.\nRegistrar distancia total e pace medio ao final."},
-      {id:"w2s06",nome:"Treino 2 — Bike Intervalado",desc:"Aquecimento: 10 min bike leve\nDescanso: 3 min\n\nBloco 1 — 8 intervalos\n45s ON — calorias correspondentes ao pace alvo\n30s a 30rpm — recuperacao ativa\n15s OFF — pausa total\nRest 4 min apos bloco 1\n\nBloco 2 — 8 intervalos\nMesma estrutura do bloco 1\n\nTotal: 16 intervalos de 45s = 12 min de esforco efetivo.\nRegistrar calorias de cada intervalo.\nDescanso 10 min antes da saideira."},
-      {id:"w2s07",nome:"Saideira — For Time (Time Cap 10 min)",desc:"SandBag Lunge com peso de prova — 100 passos (50 por perna)\nPeso oficial de prova Hyrox.\nRegistrar tempo final."},
+      {id:"w2s05",nome:"Treino 1 — Corrida do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"w2s06",nome:"Treino 2 — Bike Intervalado",desc:"Aquecimento 10 min\nDescanso 3 min\n\nBloco 1 — 8 intervalos\n45s ON / 30s @30rpm / 15s OFF\nRest 4 min\n\nBloco 2 — 8 intervalos\nMesma estrutura\n\nDescanso 10 min antes da saideira."},
+      {id:"w2s07",nome:"Saideira — For Time (Time Cap 10 min)",desc:"SandBag Lunge 100 passos com peso de prova"},
     ],
     w2d03:[
-      {id:"w2s08",nome:"SkiErg — Aquecimento",desc:"SkiErg leve 10 min.\nDescanso 3 min antes de iniciar a parte principal."},
-      {id:"w2s09",nome:"SkiErg — Principal (4.000m total)",desc:"Blocos alternados — manter consistencia de SPM e tecnica.\n\nBloco 1 — 1.000m a pace 2km — Rest 30s\nBloco 2 — 300m a pace alvo — Rest 1 min\nBloco 3 — 1.000m a pace 2km — Rest 30s\nBloco 4 — 200m a pace 3-5s abaixo do alvo — Rest 30s\nBloco 5 — 200m a pace 3-5s abaixo do alvo — Rest 1 min\nBloco 6 — 1.000m a pace 2km — Rest 30s\nBloco 7 — 150m a pace 3-5s abaixo do alvo — Rest 30s\nBloco 8 — 150m a pace 3-5s abaixo do alvo — Rest 1 min\n\nTotal: 4.000m"},
-      {id:"w2s10",nome:"Parte Principal — Circuito Corporal",desc:"Hoje e no amor, so com peso corporal.\n10 Rounds — Time Cap 55 min\n\nPor round:\n400m corrida\n200m remo\n2x Cindy:\n 5 Pull-ups (barra fixa)\n 10 Push-ups (flexoes)\n 15 Air Squats (agachamentos)"},
+      {id:"w2s08",nome:"SkiErg — Aquecimento",desc:"SkiErg leve 10 min.\nDescanso 3 min."},
+      {id:"w2s09",nome:"SkiErg — Principal (4.000m total)",desc:"Bloco 1 — 1.000m a pace 2km — Rest 30s\nBloco 2 — 300m a pace alvo — Rest 1 min\nBloco 3 — 1.000m a pace 2km — Rest 30s\nBloco 4 — 200m abaixo do alvo — Rest 30s\nBloco 5 — 200m abaixo do alvo — Rest 1 min\nBloco 6 — 1.000m a pace 2km — Rest 30s\nBloco 7 — 150m abaixo do alvo — Rest 30s\nBloco 8 — 150m abaixo do alvo"},
+      {id:"w2s10",nome:"Parte Principal — Circuito Corporal",desc:"10 Rounds — Time Cap 55 min\n\nPor round:\n400m corrida\n200m remo\n2x Cindy (5 Pull-ups / 10 Push-ups / 15 Air Squats)"},
     ],
     w2d04:[
-      {id:"w2s11",nome:"Treino 1 — Corrida do Kenny",desc:"Volume e estrutura conforme protocolo Kenny.\nRegistrar distancia total e pace medio ao final."},
-      {id:"w2s12",nome:"Forca — Especifica HYROX",desc:"Sled Pull — 4x20m = 80m total\nPeso de prova oficial. Rest a criterio, recuperacao completa.\n\nSled Push — 4x20m = 80m total\nPeso de prova oficial. Rest a criterio.\n\nDeadlift — Progressao por percentual\n1x15 a 40% — preparacao, foco tecnico\n1x12 a 45% — ativacao\n1x8 a 55% — transicao\n4x5 a 65% — trabalho principal\n\nTotal: 55 reps. Manter lombar neutro. Registrar peso usado."},
-      {id:"w2s13b",nome:"Saideira — Remo por SPM (6.000m total)",desc:"4 blocos de 1.500m com controle de SPM.\n\nBloco 1 — 1.500m a 22 SPM — Rest 2 min\nBloco 2 — 1.500m a 24 SPM — Rest 2 min\nBloco 3 — 1.500m a 22 SPM — Rest 2 min\nBloco 4 — 1.500m a 24 SPM\n\nObjetivo: desenvolver controle de SPM. Registrar pace de cada bloco."},
+      {id:"w2s11",nome:"Treino 1 — Corrida do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"w2s12",nome:"Forca — Especifica HYROX",desc:"Sled Pull 4x20m — peso de prova\nSled Push 4x20m — peso de prova\nDeadlift: 1x15@40% | 1x12@45% | 1x8@55% | 4x5@65%"},
+      {id:"w2s13b",nome:"Saideira — Remo por SPM (6.000m)",desc:"1.500m a 22 SPM — Rest 2 min\n1.500m a 24 SPM — Rest 2 min\n1.500m a 22 SPM — Rest 2 min\n1.500m a 24 SPM"},
     ],
     w2d05:[
-      {id:"w2s13",nome:"EMOM 32 min — Especifico HYROX",desc:"4 estacoes. Ciclo de 4 min repetido 8 vezes.\n\nMin 1 — Row — 12 cal (F) / 15 cal (M)\nMin 2 — Burpee Broad Jump — 10m\nMin 3 — SkiErg — 12 cal (F) / 15 cal (M)\nMin 4 — Run — 150m ou 45s\n\nVolumes estimados:\nRemo: 8 rounds x 300m = 2.400m\nBurpee Broad Jump: 8x10m = 80m total\nSkiErg: 8 rounds x 225m = 1.800m\nCorrida: 8x150m = 1.200m"},
+      {id:"w2s13",nome:"EMOM 32 min — Especifico HYROX",desc:"4 estacoes. Ciclo de 4 min x 8 vezes.\n\nMin 1 — Row — 12 cal (F) / 15 cal (M)\nMin 2 — Burpee Broad Jump — 10m\nMin 3 — SkiErg — 12 cal (F) / 15 cal (M)\nMin 4 — Run — 150m ou 45s"},
     ],
     w2d06:[
-      {id:"w2s14",nome:"Longao do Kenny",desc:"Volume e estrutura conforme protocolo Kenny.\nRegistrar distancia total e pace medio ao final."},
-      {id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)",desc:"5 rounds com rest de 3 a 5 min entre cada round.\nRecuperacao completa obrigatoria.\n\nPor round:\nBike — 10s de potencia maxima absoluta\nJump Squat — 4 reps, explosivo sem carga\n\nObjetivo: qualidade maxima em cada repeticao."},
-      {id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)",desc:"3 rounds por exercicio. Rest 1 min entre series.\n\nExercicio 1 — Dead Hang\n3 series — duracao maxima sustentavel\nRegistrar tempo de cada serie\nRest 1 min\n\nExercicio 2 — Plate Pinch\n3 series x 45s\nRest 1 min\n\nExercicio 3 — Dumbbell Head Pinch\n3 series x 45s\nRest 1 min\n\nExtra — Farmer Hold\nAcumular 3 min total\nMaximo de 4 series\nPeso acima do peso de prova"},
+      {id:"w2s14",nome:"Longao do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)",desc:"5 rounds, rest 3-5 min.\nBike 10s potencia maxima\nJump Squat 4 reps explosivo"},
+      {id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)",desc:"Dead Hang 3 series — duracao maxima\nPlate Pinch 3x45s\nDumbbell Head Pinch 3x45s\nFarmer Hold — acumular 3 min"},
     ],
-    kd01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal — Preparacao para Simulado"},{id:"w2s03",nome:"Saideira — For Time (Time Cap 7 min)"},{id:"w2s04",nome:"Core — 3 Rounds"}],
-    kd02:[{id:"w2s05",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s06",nome:"Treino 2 — Bike Intervalado"},{id:"w2s07",nome:"Saideira — For Time (Time Cap 10 min)"}],
-    kd03:[{id:"w2s08",nome:"SkiErg — Aquecimento"},{id:"w2s09",nome:"SkiErg — Principal (4.000m total)"},{id:"w2s10",nome:"Parte Principal — Circuito Corporal"}],
-    kd04:[{id:"w2s11",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s12",nome:"Forca — Especifica HYROX"},{id:"w2s13b",nome:"Saideira — Remo por SPM (6.000m total)"}],
-    kd05:[{id:"w2s13",nome:"EMOM 32 min — Especifico HYROX"}],
-    kd06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)"},{id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)"}],
-    td01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal — Preparacao para Simulado"},{id:"w2s03",nome:"Saideira — For Time (Time Cap 7 min)"},{id:"w2s04",nome:"Core — 3 Rounds"}],
-    td02:[{id:"w2s05",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s06",nome:"Treino 2 — Bike Intervalado"},{id:"w2s07",nome:"Saideira — For Time (Time Cap 10 min)"}],
-    td03:[{id:"w2s08",nome:"SkiErg — Aquecimento"},{id:"w2s09",nome:"SkiErg — Principal (4.000m total)"},{id:"w2s10",nome:"Parte Principal — Circuito Corporal"}],
-    td04:[{id:"w2s11",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s12",nome:"Forca — Especifica HYROX"},{id:"w2s13b",nome:"Saideira — Remo por SPM (6.000m total)"}],
-    td05:[{id:"w2s13",nome:"EMOM 32 min — Especifico HYROX"}],
-    td06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)"},{id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)"}],
-    dd01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal — Preparacao para Simulado"},{id:"w2s03",nome:"Saideira — For Time (Time Cap 7 min)"},{id:"w2s04",nome:"Core — 3 Rounds"}],
-    dd02:[{id:"w2s05",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s06",nome:"Treino 2 — Bike Intervalado"},{id:"w2s07",nome:"Saideira — For Time (Time Cap 10 min)"}],
-    dd03:[{id:"w2s08",nome:"SkiErg — Aquecimento"},{id:"w2s09",nome:"SkiErg — Principal (4.000m total)"},{id:"w2s10",nome:"Parte Principal — Circuito Corporal"}],
-    dd04:[{id:"w2s11",nome:"Treino 1 — Corrida do Kenny"},{id:"w2s12",nome:"Forca — Especifica HYROX"},{id:"w2s13b",nome:"Saideira — Remo por SPM (6.000m total)"}],
-    dd05:[{id:"w2s13",nome:"EMOM 32 min — Especifico HYROX"}],
-    dd06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)"},{id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)"}],
+    kd01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal"},{id:"w2s03",nome:"Saideira Wall Ball"},{id:"w2s04",nome:"Core"}],
+    kd02:[{id:"w2s05",nome:"Corrida do Kenny"},{id:"w2s06",nome:"Bike Intervalado"},{id:"w2s07",nome:"Saideira Sandbag"}],
+    kd03:[{id:"w2s08",nome:"SkiErg Aquecimento"},{id:"w2s09",nome:"SkiErg Principal"},{id:"w2s10",nome:"Circuito Corporal"}],
+    kd04:[{id:"w2s11",nome:"Corrida do Kenny"},{id:"w2s12",nome:"Forca HYROX"},{id:"w2s13b",nome:"Remo por SPM"}],
+    kd05:[{id:"w2s13",nome:"EMOM 32 min HYROX"}],
+    kd06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia ATP-CP"},{id:"w2s16",nome:"Grip Circuit"}],
+    td01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal"},{id:"w2s03",nome:"Saideira Wall Ball"},{id:"w2s04",nome:"Core"}],
+    td02:[{id:"w2s05",nome:"Corrida do Kenny"},{id:"w2s06",nome:"Bike Intervalado"},{id:"w2s07",nome:"Saideira Sandbag"}],
+    td03:[{id:"w2s08",nome:"SkiErg Aquecimento"},{id:"w2s09",nome:"SkiErg Principal"},{id:"w2s10",nome:"Circuito Corporal"}],
+    td04:[{id:"w2s11",nome:"Corrida do Kenny"},{id:"w2s12",nome:"Forca HYROX"},{id:"w2s13b",nome:"Remo por SPM"}],
+    td05:[{id:"w2s13",nome:"EMOM 32 min HYROX"}],
+    td06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia ATP-CP"},{id:"w2s16",nome:"Grip Circuit"}],
+    dd01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal"},{id:"w2s03",nome:"Saideira Wall Ball"},{id:"w2s04",nome:"Core"}],
+    dd02:[{id:"w2s05",nome:"Corrida do Kenny"},{id:"w2s06",nome:"Bike Intervalado"},{id:"w2s07",nome:"Saideira Sandbag"}],
+    dd03:[{id:"w2s08",nome:"SkiErg Aquecimento"},{id:"w2s09",nome:"SkiErg Principal"},{id:"w2s10",nome:"Circuito Corporal"}],
+    dd04:[{id:"w2s11",nome:"Corrida do Kenny"},{id:"w2s12",nome:"Forca HYROX"},{id:"w2s13b",nome:"Remo por SPM"}],
+    dd05:[{id:"w2s13",nome:"EMOM 32 min HYROX"}],
+    dd06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia ATP-CP"},{id:"w2s16",nome:"Grip Circuit"}],
   },
   exercicios:{
     s04:[
-      {id:"e020",nome:"Back Squat",sub:"1x10 @55% | 1x8 @60% | 1x6 @65% | 1x6 @70% | 1x6 @75%",timer:0,note:true,rest:false,pr:"back_squat",pcts:[55,60,65,70,75],reps:[10,8,6,6,6]},
+      {id:"e020",nome:"Back Squat",sub:"1x10@55% | 1x8@60% | 1x6@65% | 1x6@70% | 1x6@75%",timer:0,note:true,rest:false,pr:"back_squat",pcts:[55,60,65,70,75],reps:[10,8,6,6,6]},
       {id:"e025",nome:"Goblet Lateral Squat",sub:"4x10",timer:0,note:true,rest:false},
       {id:"e026",nome:"Sumo Deadlift",sub:"4x10",timer:0,note:true,rest:false,pr:"deadlift"},
     ],
-    s10:[{id:"e051",nome:"Deadlift",sub:"1x15 @40% | 1x12 @45% | 1x8 @50% | 3x6 @60%",timer:0,note:true,rest:false,pr:"deadlift",pcts:[40,45,50,60,60,60],reps:[15,12,8,6,6,6]}],
-    s01:[
-      {id:"e001",nome:"1 min somente bracos",sub:"",timer:60,note:false,rest:false},
-      {id:"e002",nome:"1 min bracos + core",sub:"",timer:60,note:false,rest:false},
-      {id:"e003",nome:"1 min remada completa",sub:"",timer:60,note:false,rest:false},
-      {id:"e004",nome:"Descanso 3 min",sub:"",timer:180,note:false,rest:true},
-    ],
-    s02:[
-      {id:"e005",nome:"8 min @ 20 SPM",sub:"Sem prender os pes",timer:480,note:true,rest:false,pr:"remo"},
-      {id:"e006",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"e007",nome:"8 min @ 22 SPM",sub:"",timer:480,note:true,rest:false},
-      {id:"e008",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"e009",nome:"8 min @ 20 SPM",sub:"",timer:480,note:true,rest:false},
-    ],
-    s05:[
-      {id:"e027",nome:"Prancha 30s",sub:"",timer:30,note:false,rest:false},
-      {id:"e028",nome:"15/15 L-Sit Hell Over",sub:"",timer:0,note:false,rest:false,link:"https://www.youtube.com/watch?v=VY9pN4iTVEs&t=7s"},
-      {id:"e029",nome:"Prancha Lateral 20s",sub:"",timer:20,note:false,rest:false},
-    ],
-    s06:[
-      {id:"e030",nome:"10 min aquecimento bike",sub:"Baixa intensidade",timer:600,note:false,rest:false},
-      {id:"e032",nome:"Teste 12 min — maximo cal bike",sub:"Anotar total de calorias",timer:720,note:true,rest:false},
-    ],
-    s08:[
-      {id:"e037",nome:"10 min aquecimento ski",sub:"Baixa intensidade",timer:600,note:false,rest:false},
-      {id:"e039",nome:"Teste Ski — pace maximo",sub:"Anotar resultado",timer:0,note:true,rest:false,pr:"ski"},
-    ],
+    s10:[{id:"e051",nome:"Deadlift",sub:"1x15@40% | 1x12@45% | 1x8@50% | 3x6@60%",timer:0,note:true,rest:false,pr:"deadlift",pcts:[40,45,50,60,60,60],reps:[15,12,8,6,6,6]}],
+    s01:[{id:"e001",nome:"1 min somente bracos",timer:60,note:false,rest:false},{id:"e002",nome:"1 min bracos + core",timer:60,note:false,rest:false},{id:"e003",nome:"1 min remada completa",timer:60,note:false,rest:false},{id:"e004",nome:"Descanso 3 min",timer:180,note:false,rest:true}],
+    s02:[{id:"e005",nome:"8 min @ 20 SPM",sub:"Sem prender os pes",timer:480,note:true,rest:false,pr:"remo"},{id:"e006",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"e007",nome:"8 min @ 22 SPM",timer:480,note:true,rest:false},{id:"e008",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"e009",nome:"8 min @ 20 SPM",timer:480,note:true,rest:false}],
+    s05:[{id:"e027",nome:"Prancha 30s",timer:30,note:false,rest:false},{id:"e028",nome:"15/15 L-Sit Hell Over",timer:0,note:false,rest:false,link:"https://www.youtube.com/watch?v=VY9pN4iTVEs&t=7s"},{id:"e029",nome:"Prancha Lateral 20s",timer:20,note:false,rest:false}],
+    s06:[{id:"e030",nome:"10 min aquecimento bike",sub:"Baixa intensidade",timer:600,note:false,rest:false},{id:"e032",nome:"Teste 12 min — maximo cal bike",sub:"Anotar total de calorias",timer:720,note:true,rest:false}],
+    s08:[{id:"e037",nome:"10 min aquecimento ski",sub:"Baixa intensidade",timer:600,note:false,rest:false},{id:"e039",nome:"Teste Ski — pace maximo",sub:"Anotar resultado",timer:0,note:true,rest:false,pr:"ski"}],
     s11:[{id:"e055",nome:"Assault Bike — intervalos",sub:"Calorias do protocolo",timer:0,note:true,rest:false,pr:"assault"}],
-    s12:[
-      {id:"e061",nome:"3km @ 20-24 SPM",sub:"",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"e063",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"e065",nome:"2km @ 20-24 SPM",sub:"",timer:0,note:true,rest:false},
-      {id:"e067",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"e069",nome:"1km @ 20-24 SPM",sub:"",timer:0,note:true,rest:false},
-    ],
-    s13:[
-      {id:"e073",nome:"10s bike potencia maxima",sub:"",timer:10,note:false,rest:false,pr:"assault"},
-      {id:"e075",nome:"Descanso 3-5 min",sub:"",timer:240,note:false,rest:true},
-    ],
-    s15:[
-      {id:"e083",nome:"Row 15 cal / Min",sub:"EMOM — anotar tempo",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"e085",nome:"SkiErg 15 cal / Min",sub:"EMOM — anotar tempo",timer:0,note:true,rest:false,pr:"ski"},
-    ],
-    s16:[
-      {id:"e088",nome:"40 Wall Ball unbroken",sub:"",timer:0,note:true,rest:false},
-      {id:"e089",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"e090",nome:"3x25 Wall Ball",sub:"Rest 1 min entre series",timer:0,note:true,rest:false},
-    ],
+    s12:[{id:"e061",nome:"3km @ 20-24 SPM",timer:0,note:true,rest:false,pr:"remo"},{id:"e063",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"e065",nome:"2km @ 20-24 SPM",timer:0,note:true,rest:false},{id:"e067",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"e069",nome:"1km @ 20-24 SPM",timer:0,note:true,rest:false}],
+    s13:[{id:"e073",nome:"10s bike potencia maxima",timer:10,note:false,rest:false,pr:"assault"},{id:"e075",nome:"Descanso 3-5 min",timer:240,note:false,rest:true}],
+    s15:[{id:"e083",nome:"Row 15 cal / Min",sub:"EMOM",timer:0,note:true,rest:false,pr:"remo"},{id:"e085",nome:"SkiErg 15 cal / Min",sub:"EMOM",timer:0,note:true,rest:false,pr:"ski"}],
+    s16:[{id:"e088",nome:"40 Wall Ball unbroken",timer:0,note:true,rest:false},{id:"e089",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"e090",nome:"3x25 Wall Ball",sub:"Rest 1 min entre series",timer:0,note:true,rest:false}],
     w2s01:[{id:"w2e001",nome:"Corrida trote leve",sub:"10 min — RPE 3-4",timer:600,note:false,rest:false}],
     w2s02:[
-      {id:"w2e002",nome:"Bloco 1 — 300m corrida + 2 min Ski + 200m corrida",sub:"Ski no pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e004",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
+      {id:"w2e002",nome:"Bloco 1 — 300m corrida + 2min Ski + 200m corrida",sub:"Ski no pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"w2e004",nome:"Rest 2 min",timer:120,note:false,rest:true},
       {id:"w2e005",nome:"Bloco 2 — 300m corrida + 25m Sled Push + 200m corrida",sub:"Sled Push unbroken",timer:0,note:true,rest:false},
-      {id:"w2e007",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
+      {id:"w2e007",nome:"Rest 2 min",timer:120,note:false,rest:true},
       {id:"w2e008",nome:"Bloco 3 — 300m corrida + 25m Sled Pull + 200m corrida",sub:"Sled Pull unbroken",timer:0,note:true,rest:false},
-      {id:"w2e010",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"w2e011",nome:"Bloco 4 — 300m corrida + 40m Burpee Broad Jump + 200m corrida",sub:"Burpee cadenciado unbroken",timer:0,note:true,rest:false},
-      {id:"w2e013",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"w2e014",nome:"Bloco 5 — 300m corrida + 2 min Remo + 200m corrida",sub:"Remo no pace dos 2km",timer:0,note:true,rest:false,pr:"remo"},
+      {id:"w2e010",nome:"Rest 2 min",timer:120,note:false,rest:true},
+      {id:"w2e011",nome:"Bloco 4 — 300m corrida + 40m Burpee Broad Jump + 200m corrida",timer:0,note:true,rest:false},
+      {id:"w2e013",nome:"Rest 2 min",timer:120,note:false,rest:true},
+      {id:"w2e014",nome:"Bloco 5 — 300m corrida + 2min Remo + 200m corrida",sub:"Remo no pace dos 2km",timer:0,note:true,rest:false,pr:"remo"},
       {id:"w2e016",nome:"Rest 10 min",sub:"Transicao para saideira",timer:600,note:false,rest:true},
     ],
     w2s03:[{id:"w2e017",nome:"For Time — Time Cap 7 min",sub:"150 Wall Ball — peso oficial de prova",timer:420,note:true,rest:false}],
-    w2s04:[
-      {id:"w2e018",nome:"V-up — 20 reps",sub:"",timer:0,note:false,rest:false},
-      {id:"w2e019",nome:"L-Sit Hell Over — 15 reps cada lado",sub:"",timer:0,note:false,rest:false,link:"https://www.youtube.com/watch?v=VY9pN4iTVEs&t=7s"},
-      {id:"w2e020",nome:"Prancha — 30s",sub:"",timer:30,note:false,rest:false},
-    ],
-    w2s05:[{id:"w2e021",nome:"Corrida do Kenny",sub:"Seguir protocolo. Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
-    w2s06:[
-      {id:"w2e022",nome:"Aquecimento — 10 min bike leve",sub:"",timer:600,note:false,rest:false},
-      {id:"w2e023",nome:"Descanso 3 min",sub:"",timer:180,note:false,rest:true},
-      {id:"w2e024",nome:"Bloco 1 — 8x (45s ON / 30s @30rpm / 15s OFF)",sub:"Calorias correspondentes ao pace alvo",timer:0,note:true,rest:false,pr:"assault"},
-      {id:"w2e025",nome:"Rest 4 min",sub:"",timer:240,note:false,rest:true},
-      {id:"w2e026",nome:"Bloco 2 — 8x (45s ON / 30s @30rpm / 15s OFF)",sub:"Mesma estrutura do bloco 1",timer:0,note:true,rest:false,pr:"assault"},
-      {id:"w2e027",nome:"Descanso 10 min",sub:"Antes da saideira",timer:600,note:false,rest:true},
-    ],
-    w2s07:[{id:"w2e028",nome:"For Time — Time Cap 10 min",sub:"SandBag Lunge 100 passos com peso de prova (50 por perna)",timer:600,note:true,rest:false}],
-    w2s08:[
-      {id:"w2e029",nome:"SkiErg leve — 10 min",sub:"Baixa intensidade",timer:600,note:false,rest:false},
-      {id:"w2e030",nome:"Descanso 3 min",sub:"",timer:180,note:false,rest:true},
-    ],
-    w2s09:[
-      {id:"w2e031",nome:"1.000m a pace 2km",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e032",nome:"Rest 30s",sub:"",timer:30,note:false,rest:true},
-      {id:"w2e033",nome:"300m a pace alvo",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e034",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"w2e035",nome:"1.000m a pace 2km",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e036",nome:"Rest 30s",sub:"",timer:30,note:false,rest:true},
-      {id:"w2e037",nome:"200m a pace 3-5s abaixo do alvo",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e038",nome:"Rest 30s",sub:"",timer:30,note:false,rest:true},
-      {id:"w2e039",nome:"200m a pace 3-5s abaixo do alvo",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e040",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"w2e041",nome:"1.000m a pace 2km",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e042",nome:"Rest 30s",sub:"",timer:30,note:false,rest:true},
-      {id:"w2e043",nome:"150m a pace 3-5s abaixo do alvo",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e044",nome:"Rest 30s",sub:"",timer:30,note:false,rest:true},
-      {id:"w2e045",nome:"150m a pace 3-5s abaixo do alvo",sub:"",timer:0,note:true,rest:false,pr:"ski"},
-    ],
-    w2s10:[{id:"w2e046",nome:"10 Rounds — Time Cap 55 min",sub:"Por round: 400m corrida + 200m remo + 2x Cindy (5 Pull-ups / 10 Push-ups / 15 Air Squats)",timer:3300,note:true,rest:false}],
-    w2s11:[{id:"w2e049",nome:"Corrida do Kenny",sub:"Seguir protocolo. Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
-    w2s12:[
-      {id:"w2e046b",nome:"Sled Pull — 4x20m",sub:"Peso de prova oficial",timer:0,note:true,rest:false},
-      {id:"w2e047b",nome:"Sled Push — 4x20m",sub:"Peso de prova oficial",timer:0,note:true,rest:false},
-      {id:"w2e048b",nome:"Deadlift",sub:"1x15 @40% | 1x12 @45% | 1x8 @55% | 4x5 @65%",timer:0,note:true,rest:false,pr:"deadlift",pcts:[40,45,55,65,65,65,65],reps:[15,12,8,5,5,5,5]},
-    ],
-    w2s13b:[
-      {id:"w2e050",nome:"1.500m a 22 SPM",sub:"",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"w2e051",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"w2e052",nome:"1.500m a 24 SPM",sub:"",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"w2e053",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"w2e054",nome:"1.500m a 22 SPM",sub:"",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"w2e055",nome:"Rest 2 min",sub:"",timer:120,note:false,rest:true},
-      {id:"w2e056",nome:"1.500m a 24 SPM",sub:"",timer:0,note:true,rest:false,pr:"remo"},
-    ],
-    w2s13:[
-      {id:"w2e057",nome:"Min 1 — Row — 12 cal (F) / 15 cal (M)",sub:"8 rounds",timer:0,note:true,rest:false,pr:"remo"},
-      {id:"w2e058",nome:"Min 2 — Burpee Broad Jump — 10m",sub:"80m total",timer:0,note:true,rest:false},
-      {id:"w2e059",nome:"Min 3 — SkiErg — 12 cal (F) / 15 cal (M)",sub:"8 rounds",timer:0,note:true,rest:false,pr:"ski"},
-      {id:"w2e060",nome:"Min 4 — Run — 150m ou 45s",sub:"Estrategia livre entre os rounds",timer:0,note:true,rest:false},
-    ],
-    w2s14:[{id:"w2e061",nome:"Longao do Kenny",sub:"Seguir protocolo. Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
-    w2s15:[
-      {id:"w2e062",nome:"Bike — 10s potencia maxima",sub:"",timer:10,note:false,rest:false,pr:"assault"},
-      {id:"w2e063",nome:"Jump Squat — 4 reps",sub:"Explosivo, sem carga",timer:0,note:false,rest:false},
-      {id:"w2e064",nome:"Descanso 3-5 min",sub:"Recuperacao completa",timer:240,note:false,rest:true},
-    ],
-    w2s16:[
-      {id:"w2e065",nome:"Dead Hang — 3 series",sub:"Duracao maxima. Registrar tempo de cada serie.",timer:0,note:true,rest:false},
-      {id:"w2e066",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"w2e067",nome:"Plate Pinch — 3x45s",sub:"",timer:45,note:true,rest:false},
-      {id:"w2e068",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"w2e069",nome:"Dumbbell Head Pinch — 3x45s",sub:"",timer:45,note:true,rest:false},
-      {id:"w2e070",nome:"Rest 1 min",sub:"",timer:60,note:false,rest:true},
-      {id:"w2e071",nome:"Farmer Hold — acumular 3 min",sub:"Max 4 series. Peso acima do peso de prova.",timer:0,note:true,rest:false},
-    ],
+    w2s04:[{id:"w2e018",nome:"V-up — 20 reps",timer:0,note:false,rest:false},{id:"w2e019",nome:"L-Sit Hell Over — 15 reps cada lado",timer:0,note:false,rest:false,link:"https://www.youtube.com/watch?v=VY9pN4iTVEs&t=7s"},{id:"w2e020",nome:"Prancha — 30s",timer:30,note:false,rest:false}],
+    w2s05:[{id:"w2e021",nome:"Corrida do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    w2s06:[{id:"w2e022",nome:"Aquecimento — 10 min bike leve",timer:600,note:false,rest:false},{id:"w2e023",nome:"Descanso 3 min",timer:180,note:false,rest:true},{id:"w2e024",nome:"Bloco 1 — 8x(45s ON/30s@30rpm/15s OFF)",sub:"Calorias do pace alvo",timer:0,note:true,rest:false,pr:"assault"},{id:"w2e025",nome:"Rest 4 min",timer:240,note:false,rest:true},{id:"w2e026",nome:"Bloco 2 — 8x(45s ON/30s@30rpm/15s OFF)",timer:0,note:true,rest:false,pr:"assault"},{id:"w2e027",nome:"Descanso 10 min",timer:600,note:false,rest:true}],
+    w2s07:[{id:"w2e028",nome:"For Time — Time Cap 10 min",sub:"SandBag Lunge 100 passos peso de prova",timer:600,note:true,rest:false}],
+    w2s08:[{id:"w2e029",nome:"SkiErg leve — 10 min",timer:600,note:false,rest:false},{id:"w2e030",nome:"Descanso 3 min",timer:180,note:false,rest:true}],
+    w2s09:[{id:"w2e031",nome:"1.000m a pace 2km",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e032",nome:"Rest 30s",timer:30,note:false,rest:true},{id:"w2e033",nome:"300m a pace alvo",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e034",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e035",nome:"1.000m a pace 2km",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e036",nome:"Rest 30s",timer:30,note:false,rest:true},{id:"w2e037",nome:"200m abaixo do alvo",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e038",nome:"Rest 30s",timer:30,note:false,rest:true},{id:"w2e039",nome:"200m abaixo do alvo",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e040",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e041",nome:"1.000m a pace 2km",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e042",nome:"Rest 30s",timer:30,note:false,rest:true},{id:"w2e043",nome:"150m abaixo do alvo",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e044",nome:"Rest 30s",timer:30,note:false,rest:true},{id:"w2e045",nome:"150m abaixo do alvo",timer:0,note:true,rest:false,pr:"ski"}],
+    w2s10:[{id:"w2e046",nome:"10 Rounds — Time Cap 55 min",sub:"Por round: 400m corrida + 200m remo + 2x Cindy",timer:3300,note:true,rest:false}],
+    w2s11:[{id:"w2e049",nome:"Corrida do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    w2s12:[{id:"w2e046b",nome:"Sled Pull — 4x20m",sub:"Peso de prova",timer:0,note:true,rest:false},{id:"w2e047b",nome:"Sled Push — 4x20m",sub:"Peso de prova",timer:0,note:true,rest:false},{id:"w2e048b",nome:"Deadlift",sub:"1x15@40% | 1x12@45% | 1x8@55% | 4x5@65%",timer:0,note:true,rest:false,pr:"deadlift",pcts:[40,45,55,65,65,65,65],reps:[15,12,8,5,5,5,5]}],
+    w2s13b:[{id:"w2e050",nome:"1.500m a 22 SPM",timer:0,note:true,rest:false,pr:"remo"},{id:"w2e051",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"w2e052",nome:"1.500m a 24 SPM",timer:0,note:true,rest:false,pr:"remo"},{id:"w2e053",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"w2e054",nome:"1.500m a 22 SPM",timer:0,note:true,rest:false,pr:"remo"},{id:"w2e055",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"w2e056",nome:"1.500m a 24 SPM",timer:0,note:true,rest:false,pr:"remo"}],
+    w2s13:[{id:"w2e057",nome:"Min 1 — Row — 12cal(F)/15cal(M)",sub:"8 rounds",timer:0,note:true,rest:false,pr:"remo"},{id:"w2e058",nome:"Min 2 — Burpee Broad Jump — 10m",sub:"80m total",timer:0,note:true,rest:false},{id:"w2e059",nome:"Min 3 — SkiErg — 12cal(F)/15cal(M)",sub:"8 rounds",timer:0,note:true,rest:false,pr:"ski"},{id:"w2e060",nome:"Min 4 — Run — 150m ou 45s",timer:0,note:true,rest:false}],
+    w2s14:[{id:"w2e061",nome:"Longao do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    w2s15:[{id:"w2e062",nome:"Bike — 10s potencia maxima",timer:10,note:false,rest:false,pr:"assault"},{id:"w2e063",nome:"Jump Squat — 4 reps",sub:"Explosivo, sem carga",timer:0,note:false,rest:false},{id:"w2e064",nome:"Descanso 3-5 min",sub:"Recuperacao completa",timer:240,note:false,rest:true}],
+    w2s16:[{id:"w2e065",nome:"Dead Hang — 3 series",sub:"Duracao maxima. Registrar tempo.",timer:0,note:true,rest:false},{id:"w2e066",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e067",nome:"Plate Pinch — 3x45s",timer:45,note:true,rest:false},{id:"w2e068",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e069",nome:"Dumbbell Head Pinch — 3x45s",timer:45,note:true,rest:false},{id:"w2e070",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e071",nome:"Farmer Hold — acumular 3 min",sub:"Peso acima do de prova.",timer:0,note:true,rest:false}],
   },
-  done:{}, notes:{},
+  done:{},notes:{},
   prs:{camila01:{},kenny01:{},thiago01:{},darfine01:{}},
 };
 
-// ─── UTILS ───────────────────────────────────────────────────────
-const fmtMMSS = s => `${String(Math.floor(Math.max(0,s)/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
-const fmtTime = s => { const m=Math.floor(s/60),r=s%60; return m>0?`${m}:${String(r).padStart(2,"0")}`:`${r}s`; };
-const toSec = (m,s) => parseInt(m||0)*60+parseInt(s||0);
-const round25 = v => Math.round(v/2.5)*2.5;
-const uid = () => "ex_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
-
-// ─── STYLES ──────────────────────────────────────────────────────
-const INP={width:"100%",fontSize:15,padding:"10px 12px",border:"1px solid #e0e0dc",borderRadius:10,background:"#fff",color:"#1a1a1a",outline:"none",WebkitAppearance:"none",boxSizing:"border-box"};
-const BTNCANCEL={flex:1,padding:13,fontSize:15,borderRadius:10,border:"1px solid #e0e0dc",background:"#fff",color:"#1a1a1a",cursor:"pointer",fontWeight:500};
-const BTNOK={flex:1,padding:13,fontSize:15,borderRadius:10,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer",fontWeight:600};
-const CARD={background:"#fff",border:"1px solid #e8e8e5",borderRadius:14,padding:"14px 16px",marginBottom:12};
-
-// ─── DB ──────────────────────────────────────────────────────────
 function useDB(){
-  const [db,setDB]=useState(()=>JSON.parse(JSON.stringify(SEED)));
-  const [loaded,setLoaded]=useState(false);
-  useEffect(()=>{
-    try{const s=localStorage.getItem("coachRX9");if(s)setDB(JSON.parse(s));}catch{}
-    setLoaded(true);
-  },[]);
-  const update=useCallback(fn=>{
-    setDB(prev=>{
-      const next=JSON.parse(JSON.stringify(prev));
-      fn(next);
-      try{localStorage.setItem("coachRX9",JSON.stringify(next));}catch{}
-      return next;
-    });
-  },[]);
-  return [db,update,loaded];
+  const[db,setDB]=useState(()=>JSON.parse(JSON.stringify(SEED)));
+  const[loaded,setLoaded]=useState(false);
+  useEffect(()=>{try{const s=localStorage.getItem("coachRX9");if(s)setDB(JSON.parse(s));}catch{}setLoaded(true);},[]);
+  const update=useCallback(fn=>{setDB(prev=>{const next=JSON.parse(JSON.stringify(prev));fn(next);try{localStorage.setItem("coachRX9",JSON.stringify(next));}catch{}return next;});},[]);
+  return[db,update,loaded];
 }
 
-// ─── MODO COACH ──────────────────────────────────────────────────
 const COACH_SENHA="1608";
 function useModo(){
-  const [modo,setModo]=useState(()=>{try{return localStorage.getItem("coachrx_modo")||"aluno";}catch{return "aluno";}});
-  const entrar=senha=>{if(senha===COACH_SENHA){setModo("coach");try{localStorage.setItem("coachrx_modo","coach");}catch{}return true;}return false;};
+  const[modo,setModo]=useState(()=>{try{return localStorage.getItem("coachrx_modo")||"aluno";}catch{return"aluno";}});
+  const entrar=s=>{if(s===COACH_SENHA){setModo("coach");try{localStorage.setItem("coachrx_modo","coach");}catch{}return true;}return false;};
   const sair=()=>{setModo("aluno");try{localStorage.setItem("coachrx_modo","aluno");}catch{}};
-  return [modo,entrar,sair];
+  return[modo,entrar,sair];
 }
 
+function Field({label,children}){return(<div style={{marginBottom:12}}><div style={{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:"#aaa",marginBottom:5}}>{label}</div>{children}</div>);}
+function Pill({label,active,onClick}){return(<button onClick={onClick} style={{padding:"8px 16px",fontSize:13,borderRadius:20,border:"none",background:active?"#1a1a1a":"#eeeeed",color:active?"#fff":"#555",cursor:"pointer",fontWeight:active?600:400}}>{label}</button>);}
+
 function BotaoModo({modo,entrar,sair}){
-  const [show,setShow]=useState(false);
-  const [senha,setSenha]=useState("");
-  const [erro,setErro]=useState(false);
-  if(modo==="coach") return(
-    <div style={{display:"flex",alignItems:"center",gap:8}}>
-      <span style={{fontSize:11,color:"#2a7a4b",fontWeight:700}}>● COACH</span>
-      <button onClick={sair} style={{fontSize:11,padding:"5px 12px",borderRadius:6,border:"1px solid #444",background:"transparent",color:"#888",cursor:"pointer"}}>Sair</button>
-    </div>
-  );
-  return(
-    <>
-      <button onClick={()=>setShow(true)} style={{fontSize:11,padding:"5px 12px",borderRadius:6,border:"1px solid #444",background:"transparent",color:"#888",cursor:"pointer"}}>Coach</button>
-      {show&&(
-        <div onClick={()=>{setShow(false);setSenha("");setErro(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:16,padding:"28px 24px",width:290,boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
-            <div style={{fontSize:17,fontWeight:700,marginBottom:6}}>Modo Coach</div>
-            <div style={{fontSize:13,color:"#888",marginBottom:16}}>Digite a senha para editar treinos</div>
-            <input value={senha} onChange={e=>{setSenha(e.target.value);setErro(false);}}
-              onKeyDown={e=>{if(e.key==="Enter"){if(entrar(senha)){setShow(false);setSenha("");}else setErro(true);}}}
-              placeholder="Senha" type="password" style={{...INP,marginBottom:8}}/>
-            {erro&&<div style={{fontSize:12,color:"#c0392b",marginBottom:8}}>Senha incorreta</div>}
-            <div style={{display:"flex",gap:8}}>
-              <button style={BTNCANCEL} onClick={()=>{setShow(false);setSenha("");setErro(false);}}>Cancelar</button>
-              <button style={BTNOK} onClick={()=>{if(entrar(senha)){setShow(false);setSenha("");}else setErro(true);}}>Entrar</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
+  const[show,setShow]=useState(false);
+  const[senha,setSenha]=useState("");
+  const[erro,setErro]=useState(false);
+  if(modo==="coach")return(<div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,color:"#2a7a4b",fontWeight:700}}>● COACH</span><button onClick={sair} style={{fontSize:11,padding:"5px 12px",borderRadius:6,border:"1px solid #444",background:"transparent",color:"#888",cursor:"pointer"}}>Sair</button></div>);
+  return(<>
+    <button onClick={()=>setShow(true)} style={{fontSize:11,padding:"5px 12px",borderRadius:6,border:"1px solid #444",background:"transparent",color:"#888",cursor:"pointer"}}>Coach</button>
+    {show&&(<div onClick={()=>{setShow(false);setSenha("");setErro(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.65)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:16,padding:"28px 24px",width:290,boxShadow:"0 20px 60px rgba(0,0,0,.3)"}}>
+        <div style={{fontSize:17,fontWeight:700,marginBottom:6}}>Modo Coach</div>
+        <div style={{fontSize:13,color:"#888",marginBottom:16}}>Digite a senha para editar treinos</div>
+        <input value={senha} onChange={e=>{setSenha(e.target.value);setErro(false);}} onKeyDown={e=>{if(e.key==="Enter"){if(entrar(senha)){setShow(false);setSenha("");}else setErro(true);}}} placeholder="Senha" type="password" style={{...INP,marginBottom:8}} autoFocus/>
+        {erro&&<div style={{fontSize:12,color:"#c0392b",marginBottom:8}}>Senha incorreta</div>}
+        <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>{setShow(false);setSenha("");setErro(false);}}>Cancelar</button><button style={BTNOK} onClick={()=>{if(entrar(senha)){setShow(false);setSenha("");}else setErro(true);}}>Entrar</button></div>
+      </div>
+    </div>)}
+  </>);
 }
 
 function Sheet({open,onClose,title,children}){
   if(!open)return null;
-  return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"18px 18px 0 0",padding:"20px 16px 40px",width:"100%",maxHeight:"88vh",overflowY:"auto",boxSizing:"border-box"}}>
-        <div style={{fontSize:17,fontWeight:700,marginBottom:18}}>{title}</div>
-        {children}
-      </div>
+  return(<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
+    <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"18px 18px 0 0",padding:"20px 16px 40px",width:"100%",maxHeight:"88vh",overflowY:"auto",boxSizing:"border-box"}}>
+      <div style={{fontSize:17,fontWeight:700,marginBottom:18}}>{title}</div>
+      {children}
     </div>
-  );
-}
-function Field({label,children}){return(<div style={{marginBottom:12}}><div style={{fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:"#aaa",marginBottom:5}}>{label}</div>{children}</div>);}
-function Pill({label,active,onClick}){return(<button onClick={onClick} style={{padding:"8px 16px",fontSize:13,borderRadius:20,border:"none",background:active?"#1a1a1a":"#eeeeed",color:active?"#fff":"#555",cursor:"pointer",fontWeight:active?600:400}}>{label}</button>);}
-function ProgBar({done,total,height=3}){
-  const pct=total?Math.round((done/total)*100):0;
-  return(<div style={{display:"flex",alignItems:"center",gap:8}}><div style={{flex:1,height,background:"#f0f0ee",borderRadius:99}}><div style={{height:"100%",width:`${pct}%`,background:"#2a7a4b",borderRadius:99,transition:"width .3s"}}/></div><span style={{fontSize:11,color:"#aaa",minWidth:32,textAlign:"right"}}>{done}/{total}</span></div>);
+  </div>);
 }
 
 function TimerItem({timer}){
-  const [cur,setCur]=useState(timer);
-  const [run,setRun]=useState(false);
-  const iv=useRef(null);
-  const toggle=()=>{
-    if(run){clearInterval(iv.current);setRun(false);}
-    else{let c=cur<=0?timer:cur;setCur(c);setRun(true);iv.current=setInterval(()=>{c--;setCur(c);if(c<=0){clearInterval(iv.current);setRun(false);}},1000);}
-  };
+  const[cur,setCur]=useState(timer);const[run,setRun]=useState(false);const iv=useRef(null);
+  const toggle=()=>{if(run){clearInterval(iv.current);setRun(false);}else{let c=cur<=0?timer:cur;setCur(c);setRun(true);iv.current=setInterval(()=>{c--;setCur(c);if(c<=0){clearInterval(iv.current);setRun(false);}},1000);}};
   useEffect(()=>()=>clearInterval(iv.current),[]);
-  return(
-    <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
-      <span style={{fontSize:14,fontWeight:700,fontVariantNumeric:"tabular-nums",minWidth:44}}>{fmtTime(cur)}</span>
-      <button onClick={toggle} style={{padding:"5px 12px",fontSize:12,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>{run?"Pausar":"Iniciar"}</button>
-      <button onClick={()=>{clearInterval(iv.current);setRun(false);setCur(timer);}} style={{padding:"5px 10px",fontSize:12,border:"1px solid #e0e0dc",borderRadius:8,background:"#fff",color:"#bbb",cursor:"pointer"}}>Reset</button>
-    </div>
-  );
+  return(<div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}><span style={{fontSize:14,fontWeight:700,minWidth:44}}>{fmtTime(cur)}</span><button onClick={toggle} style={{padding:"5px 12px",fontSize:12,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>{run?"Pausar":"Iniciar"}</button><button onClick={()=>{clearInterval(iv.current);setRun(false);setCur(timer);}} style={{padding:"5px 10px",fontSize:12,border:"1px solid #e0e0dc",borderRadius:8,background:"#fff",color:"#bbb",cursor:"pointer"}}>Reset</button></div>);
 }
 
 function PRBadge({prKey,pcts,reps,prs}){
   if(!prKey||!prs)return null;
   const pr=prs[prKey];
-  if(!pr||!pr.valor)return(<div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:4}}>PR nao cadastrado — va em PRs para registrar</div>);
+  if(!pr||!pr.valor)return(<div style={{fontSize:11,color:"#bbb",fontStyle:"italic",marginTop:4}}>PR nao cadastrado</div>);
   if(pr.unidade==="seg"){
     const isA=prKey==="assault";
     const pace500=!isA&&pr.dist?Math.round(pr.valor/(pr.dist/500)):0;
@@ -399,610 +254,191 @@ function PRBadge({prKey,pcts,reps,prs}){
     const alvoSec=pr.alvoTempo||0;const alvoPct=pr.alvoPct||5;
     const p5Alvo=pace500>0?(alvoSec>0?Math.round(alvoSec/(pr.dist/500)):Math.round(pace500*(1-alvoPct/100))):0;
     const cpmAlvo=calMin>0?(alvoSec>0?(pr.cal/(alvoSec/60)):calMin*(1+alvoPct/100)):0;
-    return(
-      <div style={{background:"#f5f5f3",borderRadius:8,padding:"8px 10px",marginTop:6,fontSize:12}}>
-        <div style={{fontWeight:600,marginBottom:4}}>{pr.nome}: {isA?`${pr.cal||"?"}cal em ${fmtMMSS(pr.valor)}`:fmtMMSS(pr.valor)}{pr.dist?` (${pr.dist}m)`:""}</div>
-        {!isA&&pace500>0&&<div style={{display:"flex",gap:12,color:"#555"}}><span>Pace/500m: <strong>{fmtMMSS(pace500)}</strong></span><span style={{color:"#2a7a4b"}}>Alvo: <strong>{fmtMMSS(p5Alvo)}</strong></span></div>}
-        {isA&&calMin>0&&<div style={{display:"flex",gap:12,color:"#555"}}><span>cal/min: <strong>{calMin.toFixed(1)}</strong></span><span style={{color:"#2a7a4b"}}>Alvo: <strong>{cpmAlvo.toFixed(1)}</strong></span></div>}
-      </div>
-    );
+    return(<div style={{background:"#f5f5f3",borderRadius:8,padding:"8px 10px",marginTop:6,fontSize:12}}><div style={{fontWeight:600,marginBottom:4}}>{pr.nome}: {isA?`${pr.cal||"?"}cal em ${fmtMMSS(pr.valor)}`:fmtMMSS(pr.valor)}{pr.dist?` (${pr.dist}m)`:""}</div>{!isA&&pace500>0&&<div style={{color:"#555"}}>Pace/500m: <strong>{fmtMMSS(pace500)}</strong> → Alvo: <strong style={{color:"#2a7a4b"}}>{fmtMMSS(p5Alvo)}</strong></div>}{isA&&calMin>0&&<div style={{color:"#555"}}>cal/min: <strong>{calMin.toFixed(1)}</strong> → Alvo: <strong style={{color:"#2a7a4b"}}>{cpmAlvo.toFixed(1)}</strong></div>}</div>);
   }
-  if(pcts&&pcts.length)return(
-    <div style={{background:"#f5f5f3",borderRadius:8,padding:"8px 10px",marginTop:6,fontSize:12}}>
-      <div style={{fontWeight:600,marginBottom:4}}>Base: {pr.valor} kg (1RM)</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{pcts.map((p,i)=><span key={p} style={{background:"#fff",border:"1px solid #e0e0dc",borderRadius:6,padding:"2px 7px"}}>{reps?.[i]??"-"}x @ {p}% = {round25(pr.valor*p/100)}kg</span>)}</div>
-    </div>
-  );
+  if(pcts&&pcts.length)return(<div style={{background:"#f5f5f3",borderRadius:8,padding:"8px 10px",marginTop:6,fontSize:12}}><div style={{fontWeight:600,marginBottom:4}}>Base: {pr.valor} kg (1RM)</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{pcts.map((p,i)=><span key={p} style={{background:"#fff",border:"1px solid #e0e0dc",borderRadius:6,padding:"2px 7px"}}>{reps?.[i]??"-"}x@{p}%={round25(pr.valor*p/100)}kg</span>)}</div></div>);
   return(<div style={{fontSize:12,color:"#555",marginTop:4}}>PR: {pr.valor} {pr.unidade}</div>);
 }
 
 function ExItem({ex,note,prs,onNote,isCoach,onEdit,onRemove}){
-  return(
-    <div style={{padding:"12px 0",borderBottom:"1px solid #f5f5f3"}}>
-      {isCoach?(
-        <div>
-          <div style={{display:"flex",gap:6,marginBottom:6}}>
-            <input value={ex.nome} onChange={e=>onEdit("nome",e.target.value)} style={{...INP,fontSize:14,fontWeight:600,padding:"7px 10px",flex:2}} placeholder="Nome do exercicio"/>
-            <button onClick={onRemove} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"1px solid #fcc",background:"#fff8f8",color:"#c00",cursor:"pointer"}}>✕</button>
-          </div>
-          <input value={ex.sub} onChange={e=>onEdit("sub",e.target.value)} style={{...INP,fontSize:13,padding:"7px 10px",marginBottom:6,color:"#777"}} placeholder="Detalhe / carga / instrucao..."/>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <span style={{fontSize:11,color:"#aaa"}}>Timer (s):</span>
-            <input value={ex.timer||""} onChange={e=>onEdit("timer",parseInt(e.target.value)||0)} inputMode="numeric" style={{...INP,width:70,fontSize:13,padding:"6px 8px"}}/>
-            <span style={{fontSize:11,color:"#aaa"}}>Nota:</span>
-            <select value={ex.note?"1":"0"} onChange={e=>onEdit("note",e.target.value==="1")} style={{...INP,width:70,fontSize:13,padding:"6px 8px"}}>
-              <option value="1">Sim</option><option value="0">Nao</option>
-            </select>
-          </div>
-        </div>
-      ):(
-        <>
-          <div style={{fontSize:14,fontWeight:600,color:ex.rest?"#bbb":"#1a1a1a"}}>{ex.nome}</div>
-          {ex.sub&&<div style={{fontSize:13,color:"#888",marginTop:2}}>{ex.sub}</div>}
-          {ex.link&&<a href={ex.link} target="_blank" rel="noreferrer" style={{fontSize:12,color:"#2a7a4b",display:"block",marginTop:2}}>ver video</a>}
-          {ex.pr&&<PRBadge prKey={ex.pr} pcts={ex.pcts} reps={ex.reps} prs={prs}/>}
-          {ex.timer>0&&<TimerItem timer={ex.timer}/>}
-          {ex.note&&<textarea value={note||""} onChange={e=>onNote(e.target.value)} placeholder="Anotar resultado..." style={{...INP,marginTop:8,background:"#fafaf8",height:60,resize:"none"}}/>}
-        </>
-      )}
-    </div>
-  );
+  return(<div style={{padding:"12px 0",borderBottom:"1px solid #f5f5f3"}}>
+    {isCoach?(<div>
+      <div style={{display:"flex",gap:6,marginBottom:6}}><input value={ex.nome||""} onChange={e=>onEdit("nome",e.target.value)} style={{...INP,fontSize:14,fontWeight:600,padding:"7px 10px",flex:2}} placeholder="Nome do exercicio"/><button onClick={onRemove} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"1px solid #fcc",background:"#fff8f8",color:"#c00",cursor:"pointer"}}>✕</button></div>
+      <input value={ex.sub||""} onChange={e=>onEdit("sub",e.target.value)} style={{...INP,fontSize:13,padding:"7px 10px",marginBottom:6,color:"#777"}} placeholder="Detalhe / carga..."/>
+      <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,color:"#aaa"}}>Timer(s):</span><input value={ex.timer||""} onChange={e=>onEdit("timer",parseInt(e.target.value)||0)} inputMode="numeric" style={{...INP,width:70,fontSize:13,padding:"6px 8px"}}/><span style={{fontSize:11,color:"#aaa"}}>Nota:</span><select value={ex.note?"1":"0"} onChange={e=>onEdit("note",e.target.value==="1")} style={{...INP,width:70,fontSize:13,padding:"6px 8px"}}><option value="1">Sim</option><option value="0">Nao</option></select></div>
+    </div>):(<>
+      <div style={{fontSize:14,fontWeight:600,color:ex.rest?"#bbb":"#1a1a1a"}}>{ex.nome}</div>
+      {ex.sub&&<div style={{fontSize:13,color:"#888",marginTop:2}}>{ex.sub}</div>}
+      {ex.link&&<a href={ex.link} target="_blank" rel="noreferrer" style={{fontSize:12,color:"#2a7a4b",display:"block",marginTop:2}}>ver video</a>}
+      {ex.pr&&<PRBadge prKey={ex.pr} pcts={ex.pcts} reps={ex.reps} prs={prs}/>}
+      {ex.timer>0&&<TimerItem timer={ex.timer}/>}
+      {ex.note&&<textarea value={note||""} onChange={e=>onNote(e.target.value)} placeholder="Anotar resultado..." style={{...INP,marginTop:8,background:"#fafaf8",height:60,resize:"none"}}/>}
+    </>)}
+  </div>);
 }
 
 function SessaoBlock({ss,exs,db,update,prs,isCoach,diaId,idx,total,onMover,onDeletar}){
-  const faseKey=`ss_fase_${ss.id}`;
-  const regKey=`ss_reg_${ss.id}`;
-  const fase=db.notes[faseKey]||"idle";
-  const feito=fase==="feito";
+  const faseKey=`ss_fase_${ss.id}`;const regKey=`ss_reg_${ss.id}`;
+  const fase=db.notes[faseKey]||"idle";const feito=fase==="feito";
   const reg=db.notes[regKey]?JSON.parse(db.notes[regKey]):{};
-  const [showDesc,setShowDesc]=useState(false);
-  const [editDesc,setEditDesc]=useState(false);
-  const [novaDesc,setNovaDesc]=useState(ss.desc||"");
-  const [editNome,setEditNome]=useState(false);
-  const [novoNome,setNovoNome]=useState(ss.nome||"");
-  const [addEx,setAddEx]=useState(false);
-  const [exNome,setExNome]=useState("");const [exSub,setExSub]=useState("");
-  const [exTimer,setExTimer]=useState("");const [exNote,setExNote]=useState(true);
-  const [tempo,setTempo]=useState(reg.tempo||"");const [cal,setCal]=useState(reg.calorias||"");
-  const [dist,setDist]=useState(reg.distancia||"");const [rpe,setRpe]=useState(reg.rpe||"");
-  const [obs,setObs]=useState(reg.obs||"");
+  const[showDesc,setShowDesc]=useState(false);
+  const[editDesc,setEditDesc]=useState(false);const[novaDesc,setNovaDesc]=useState(ss.desc||"");
+  const[editNome,setEditNome]=useState(false);const[novoNome,setNovoNome]=useState(ss.nome||"");
+  const[addEx,setAddEx]=useState(false);
+  const[exNome,setExNome]=useState("");const[exSub,setExSub]=useState("");const[exTimer,setExTimer]=useState("");const[exNote,setExNote]=useState(true);
+  const[tempo,setTempo]=useState(reg.tempo||"");const[cal,setCal]=useState(reg.calorias||"");const[dist,setDist]=useState(reg.distancia||"");const[rpe,setRpe]=useState(reg.rpe||"");const[obs,setObs]=useState(reg.obs||"");
   const setFase=f=>update(d=>{d.notes[faseKey]=f;});
   const salvar=()=>{update(d=>{d.notes[regKey]=JSON.stringify({tempo,calorias:cal,distancia:dist,rpe,obs});d.notes[faseKey]="feito";d.done[`ss_done_${ss.id}`]=true;});};
   const desfazer=()=>{update(d=>{d.notes[faseKey]="idle";d.done[`ss_done_${ss.id}`]=false;delete d.notes[regKey];});setTempo("");setCal("");setDist("");setRpe("");setObs("");};
   const salvarDesc=()=>{update(d=>{Object.values(d.sessoes).forEach(arr=>arr.forEach(s=>{if(s.id===ss.id)s.desc=novaDesc;}));});setEditDesc(false);};
   const salvarNome=()=>{if(!novoNome.trim())return;update(d=>{if(d.sessoes[diaId]){const s=d.sessoes[diaId].find(x=>x.id===ss.id);if(s)s.nome=novoNome.trim();}});setEditNome(false);};
   const editarEx=(exId,campo,valor)=>{update(d=>{const lista=d.exercicios[ss.id]||[];const ex=lista.find(e=>e.id===exId);if(ex)ex[campo]=valor;});};
-  const removerEx=(exId)=>{update(d=>{d.exercicios[ss.id]=(d.exercicios[ss.id]||[]).filter(e=>e.id!==exId);});};
+  const removerEx=exId=>{update(d=>{d.exercicios[ss.id]=(d.exercicios[ss.id]||[]).filter(e=>e.id!==exId);});};
   const adicionarEx=()=>{if(!exNome.trim())return;const novo={id:uid(),nome:exNome.trim(),sub:exSub.trim(),timer:parseInt(exTimer)||0,note:exNote,rest:false};update(d=>{if(!d.exercicios[ss.id])d.exercicios[ss.id]=[];d.exercicios[ss.id].push(novo);});setExNome("");setExSub("");setExTimer("");setExNote(true);setAddEx(false);};
   const linhas=ss.desc?ss.desc.split("\n"):[];
-  return(
-    <div style={{borderBottom:"1px solid #f0f0ee"}}>
-      <div style={{padding:"12px 14px",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        <div style={{flex:1,minWidth:0}}>
-          {isCoach&&editNome?(
-            <div style={{display:"flex",gap:6,alignItems:"center"}}>
-              <input value={novoNome} onChange={e=>setNovoNome(e.target.value)} style={{...INP,fontSize:14,fontWeight:600,padding:"5px 8px",flex:1}} autoFocus onKeyDown={e=>{if(e.key==="Enter")salvarNome();if(e.key==="Escape")setEditNome(false);}}/>
-              <button onClick={salvarNome} style={{padding:"5px 10px",fontSize:12,borderRadius:7,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button>
-              <button onClick={()=>setEditNome(false)} style={{padding:"5px 8px",fontSize:12,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>✕</button>
-            </div>
-          ):(
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <span style={{fontSize:14,fontWeight:600,cursor:isCoach?"pointer":"default"}} onClick={()=>{if(isCoach){setNovoNome(ss.nome);setEditNome(true);}}}>{ss.nome}</span>
-              {feito&&!isCoach&&<span style={{fontSize:11,color:"#2a7a4b",fontWeight:700}}>✓</span>}
-            </div>
-          )}
-          {isCoach&&!editNome&&<span style={{fontSize:10,color:"#ccc"}}>ID: {ss.id}</span>}
-        </div>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
-          {/* COACH: mover + deletar */}
-          {isCoach&&(
-            <>
-              <button onClick={()=>onMover(idx,-1)} disabled={idx===0} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===0?"#ddd":"#555",cursor:idx===0?"default":"pointer"}}>↑</button>
-              <button onClick={()=>onMover(idx,1)} disabled={idx===total-1} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===total-1?"#ddd":"#555",cursor:idx===total-1?"default":"pointer"}}>↓</button>
-              <button onClick={()=>{if(window.confirm(`Deletar sessao "${ss.nome}"?`))onDeletar(ss.id);}} style={{padding:"4px 8px",fontSize:12,borderRadius:7,border:"1px solid #fcc",background:"#fff8f8",color:"#c00",cursor:"pointer"}}>🗑</button>
-              <button onClick={()=>{setNovaDesc(ss.desc||"");setEditDesc(v=>!v);}} style={{padding:"5px 10px",fontSize:12,borderRadius:7,border:"1px solid #f0d080",background:editDesc?"#fffbf0":"#fff",color:"#a07800",cursor:"pointer",fontWeight:600}}>{editDesc?"✕":"✏️ Desc"}</button>
-            </>
-          )}
-          {!isCoach&&linhas.length>0&&<button onClick={()=>setShowDesc(v=>!v)} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#f5f5f3",color:"#666",cursor:"pointer"}}>{showDesc?"▲":"▼ Ver"}</button>}
-          {!isCoach&&fase==="idle"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 16px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>Iniciar</button>}
-          {!isCoach&&fase==="ativa"&&<button onClick={()=>setFase("concluindo")} style={{padding:"7px 14px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#2a7a4b",color:"#fff",cursor:"pointer"}}>Concluir ✓</button>}
-          {!isCoach&&fase==="concluindo"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 12px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>Voltar</button>}
-          {!isCoach&&feito&&<button onClick={()=>setFase("concluindo")} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #b5dcc7",background:"#edf7f2",color:"#2a7a4b",cursor:"pointer",fontWeight:600}}>Log</button>}
-        </div>
+  return(<div style={{borderBottom:"1px solid #f0f0ee"}}>
+    <div style={{padding:"12px 14px",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+      <div style={{flex:1,minWidth:0}}>
+        {isCoach&&editNome?(<div style={{display:"flex",gap:6,alignItems:"center"}}><input value={novoNome} onChange={e=>setNovoNome(e.target.value)} style={{...INP,fontSize:14,fontWeight:600,padding:"5px 8px",flex:1}} autoFocus onKeyDown={e=>{if(e.key==="Enter")salvarNome();if(e.key==="Escape")setEditNome(false);}}/><button onClick={salvarNome} style={{padding:"5px 10px",fontSize:12,borderRadius:7,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button><button onClick={()=>setEditNome(false)} style={{padding:"5px 8px",fontSize:12,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>✕</button></div>):(<div><span style={{fontSize:14,fontWeight:600,cursor:isCoach?"pointer":"default"}} onClick={()=>{if(isCoach){setNovoNome(ss.nome);setEditNome(true);}}}>{ss.nome}</span>{feito&&!isCoach&&<span style={{marginLeft:6,fontSize:11,color:"#2a7a4b",fontWeight:700}}>✓</span>}</div>)}
+        {isCoach&&!editNome&&<div style={{fontSize:10,color:"#ccc"}}>ID: {ss.id}</div>}
       </div>
-      {!isCoach&&showDesc&&linhas.length>0&&(
-        <div style={{padding:"0 14px 12px"}}>
-          {linhas.map((l,i)=>{
-            if(l.trim()==="")return <div key={i} style={{height:8}}/>;
-            const isTit=l.startsWith("Bloco")||l.startsWith("Total")||l.startsWith("Por round")||l.startsWith("Min ");
-            return(<div key={i} style={{fontSize:13,lineHeight:1.6,fontWeight:isTit?700:400,color:isTit?"#1a1a1a":"#555",marginTop:isTit?6:0}}>{l}</div>);
-          })}
-        </div>
-      )}
-      {isCoach&&editDesc&&(
-        <div style={{padding:"0 14px 14px"}}>
-          <textarea value={novaDesc} onChange={e=>setNovaDesc(e.target.value)} style={{...INP,height:160,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:8}} placeholder="Descreva o treino..."/>
-          <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setEditDesc(false)}>Cancelar</button><button style={BTNOK} onClick={salvarDesc}>Salvar</button></div>
-        </div>
-      )}
-      {isCoach&&!editDesc&&linhas.length>0&&(
-        <div style={{padding:"0 14px 8px",fontSize:11,color:"#ccc",lineHeight:1.5,maxHeight:40,overflow:"hidden"}}>{ss.desc}</div>
-      )}
-      {(isCoach||fase==="ativa"||feito)&&(
-        <div style={{padding:"0 14px",opacity:feito&&!isCoach?0.65:1}}>
-          {exs.map(ex=>(
-            <ExItem key={ex.id} ex={ex} note={db.notes["x"+ex.id]} prs={prs} isCoach={isCoach}
-              onNote={v=>update(d=>{d.notes["x"+ex.id]=v;})}
-              onEdit={(campo,valor)=>editarEx(ex.id,campo,valor)}
-              onRemove={()=>removerEx(ex.id)}/>
-          ))}
-          {exs.length===0&&!isCoach&&<div style={{padding:"12px 0",fontSize:13,color:"#ccc",fontStyle:"italic"}}>Sem exercicios cadastrados</div>}
-        </div>
-      )}
-      {isCoach&&(
-        <div style={{padding:"8px 14px 14px"}}>
-          {addEx?(
-            <div style={{background:"#f8f8f6",border:"1px solid #e0e0dc",borderRadius:10,padding:"12px"}}>
-              <Field label="Nome"><input style={INP} value={exNome} onChange={e=>setExNome(e.target.value)} placeholder="Ex: 5x10 Wall Ball"/></Field>
-              <Field label="Detalhe"><input style={INP} value={exSub} onChange={e=>setExSub(e.target.value)} placeholder="Ex: descanso 1 min entre series"/></Field>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                <Field label="Timer (s)"><input style={INP} value={exTimer} onChange={e=>setExTimer(e.target.value)} inputMode="numeric" placeholder="0"/></Field>
-                <Field label="Nota"><select style={INP} value={exNote?"1":"0"} onChange={e=>setExNote(e.target.value==="1")}><option value="1">Sim</option><option value="0">Nao</option></select></Field>
-              </div>
-              <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddEx(false)}>Cancelar</button><button style={BTNOK} onClick={adicionarEx}>+ Adicionar</button></div>
-            </div>
-          ):(
-            <button onClick={()=>setAddEx(true)} style={{width:"100%",padding:"10px 0",fontSize:13,fontWeight:600,borderRadius:10,border:"1.5px dashed #d0c080",background:"#fffdf0",color:"#a07800",cursor:"pointer"}}>+ Adicionar exercicio</button>
-          )}
-        </div>
-      )}
-      {!isCoach&&fase==="concluindo"&&(
-        <div style={{margin:"0 14px 14px",background:"#f8f8f6",border:"1px solid #e0e0dc",borderRadius:12,padding:"14px 12px"}}>
-          <div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Como foi?</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-            <Field label="Tempo"><input style={INP} value={tempo} onChange={e=>setTempo(e.target.value)} placeholder="06:45"/></Field>
-            <Field label="Calorias"><input style={INP} value={cal} onChange={e=>setCal(e.target.value)} inputMode="numeric" placeholder="87"/></Field>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-            <Field label="Distancia"><input style={INP} value={dist} onChange={e=>setDist(e.target.value)} placeholder="1500m"/></Field>
-            <Field label="RPE (1-10)"><input style={INP} value={rpe} onChange={e=>setRpe(e.target.value)} inputMode="numeric" placeholder="8"/></Field>
-          </div>
-          <Field label="Observacoes"><textarea value={obs} onChange={e=>setObs(e.target.value)} placeholder="Sensacoes, estrategia..." style={{...INP,height:70,resize:"none"}}/></Field>
-          <div style={{display:"flex",gap:8,marginTop:6}}><button style={BTNCANCEL} onClick={()=>setFase("ativa")}>Voltar</button><button style={BTNOK} onClick={salvar}>Salvar</button></div>
-        </div>
-      )}
-      {!isCoach&&feito&&(reg.tempo||reg.calorias||reg.distancia||reg.rpe||reg.obs)&&fase==="feito"&&(
-        <div style={{margin:"0 14px 12px",background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px"}}>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:reg.obs?6:0}}>
-            {reg.tempo&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>⏱ {reg.tempo}</span>}
-            {reg.calorias&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>🔥 {reg.calorias} cal</span>}
-            {reg.distancia&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>📏 {reg.distancia}</span>}
-            {reg.rpe&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>💪 RPE {reg.rpe}/10</span>}
-          </div>
-          {reg.obs&&<div style={{fontSize:12,color:"#555",lineHeight:1.6,marginTop:4}}>{reg.obs}</div>}
-          <button onClick={desfazer} style={{marginTop:8,fontSize:11,color:"#ccc",background:"none",border:"none",padding:0,cursor:"pointer"}}>desfazer</button>
-        </div>
-      )}
+      <div style={{display:"flex",gap:4,flexShrink:0,flexWrap:"wrap"}}>
+        {isCoach&&(<>
+          <button onClick={()=>onMover(idx,-1)} disabled={idx===0} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===0?"#ddd":"#555",cursor:idx===0?"default":"pointer"}}>↑</button>
+          <button onClick={()=>onMover(idx,1)} disabled={idx===total-1} style={{padding:"4px 8px",fontSize:13,borderRadius:7,border:"1px solid #e0e0dc",background:"#fff",color:idx===total-1?"#ddd":"#555",cursor:idx===total-1?"default":"pointer"}}>↓</button>
+          <button onClick={()=>{if(window.confirm(`Deletar "${ss.nome}"?`))onDeletar(ss.id);}} style={{padding:"4px 8px",fontSize:12,borderRadius:7,border:"1px solid #fcc",background:"#fff8f8",color:"#c00",cursor:"pointer"}}>🗑</button>
+          <button onClick={()=>{setNovaDesc(ss.desc||"");setEditDesc(v=>!v);}} style={{padding:"4px 10px",fontSize:12,borderRadius:7,border:"1px solid #f0d080",background:editDesc?"#fffbf0":"#fff",color:"#a07800",cursor:"pointer",fontWeight:600}}>{editDesc?"✕":"✏️"}</button>
+        </>)}
+        {!isCoach&&linhas.length>0&&<button onClick={()=>setShowDesc(v=>!v)} style={{padding:"5px 11px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#f5f5f3",color:"#666",cursor:"pointer"}}>{showDesc?"▲":"▼ Ver"}</button>}
+        {!isCoach&&fase==="idle"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 16px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>Iniciar</button>}
+        {!isCoach&&fase==="ativa"&&<button onClick={()=>setFase("concluindo")} style={{padding:"7px 14px",fontSize:13,fontWeight:700,borderRadius:8,border:"none",background:"#2a7a4b",color:"#fff",cursor:"pointer"}}>Concluir ✓</button>}
+        {!isCoach&&fase==="concluindo"&&<button onClick={()=>setFase("ativa")} style={{padding:"7px 12px",fontSize:12,borderRadius:8,border:"1px solid #e0e0dc",background:"#fff",color:"#888",cursor:"pointer"}}>Voltar</button>}
+        {!isCoach&&feito&&<button onClick={()=>setFase("concluindo")} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #b5dcc7",background:"#edf7f2",color:"#2a7a4b",cursor:"pointer",fontWeight:600}}>Log</button>}
+      </div>
     </div>
-  );
+    {!isCoach&&showDesc&&linhas.length>0&&(<div style={{padding:"0 14px 12px"}}>{linhas.map((l,i)=>{if(l.trim()==="")return<div key={i} style={{height:8}}/>;const isTit=l.startsWith("Bloco")||l.startsWith("Total")||l.startsWith("Por round")||l.startsWith("Min ");return(<div key={i} style={{fontSize:13,lineHeight:1.6,fontWeight:isTit?700:400,color:isTit?"#1a1a1a":"#555",marginTop:isTit?4:0}}>{l}</div>);})}</div>)}
+    {isCoach&&editDesc&&(<div style={{padding:"0 14px 14px"}}><textarea value={novaDesc} onChange={e=>setNovaDesc(e.target.value)} style={{...INP,height:160,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:8}} placeholder="Descreva o treino..."/><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setEditDesc(false)}>Cancelar</button><button style={BTNOK} onClick={salvarDesc}>Salvar</button></div></div>)}
+    {isCoach&&!editDesc&&linhas.length>0&&(<div style={{padding:"0 14px 8px",fontSize:11,color:"#ccc",lineHeight:1.5,maxHeight:38,overflow:"hidden"}}>{ss.desc}</div>)}
+    {(isCoach||fase==="ativa"||feito)&&(<div style={{padding:"0 14px",opacity:feito&&!isCoach?0.65:1}}>{exs.map(ex=>(<ExItem key={ex.id} ex={ex} note={db.notes["x"+ex.id]} prs={prs} isCoach={isCoach} onNote={v=>update(d=>{d.notes["x"+ex.id]=v;})} onEdit={(c,v)=>editarEx(ex.id,c,v)} onRemove={()=>removerEx(ex.id)}/>))}{exs.length===0&&!isCoach&&<div style={{padding:"12px 0",fontSize:13,color:"#ccc",fontStyle:"italic"}}>Sem exercicios cadastrados</div>}</div>)}
+    {isCoach&&(<div style={{padding:"8px 14px 14px"}}>{addEx?(<div style={{background:"#f8f8f6",border:"1px solid #e0e0dc",borderRadius:10,padding:"12px"}}><div style={{fontSize:12,fontWeight:700,color:"#888",marginBottom:10,textTransform:"uppercase"}}>Novo exercicio</div><Field label="Nome"><input style={INP} value={exNome} onChange={e=>setExNome(e.target.value)} placeholder="Ex: 5x10 Wall Ball" autoFocus/></Field><Field label="Detalhe"><input style={INP} value={exSub} onChange={e=>setExSub(e.target.value)} placeholder="Ex: descanso 1 min"/></Field><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Field label="Timer (s)"><input style={INP} value={exTimer} onChange={e=>setExTimer(e.target.value)} inputMode="numeric" placeholder="0"/></Field><Field label="Nota"><select style={INP} value={exNote?"1":"0"} onChange={e=>setExNote(e.target.value==="1")}><option value="1">Sim</option><option value="0">Nao</option></select></Field></div><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddEx(false)}>Cancelar</button><button style={BTNOK} onClick={adicionarEx}>+ Adicionar</button></div></div>):(<button onClick={()=>setAddEx(true)} style={{width:"100%",padding:"10px 0",fontSize:13,fontWeight:600,borderRadius:10,border:"1.5px dashed #d0c080",background:"#fffdf0",color:"#a07800",cursor:"pointer"}}>+ Adicionar exercicio</button>)}</div>)}
+    {!isCoach&&fase==="concluindo"&&(<div style={{margin:"0 14px 14px",background:"#f8f8f6",border:"1px solid #e0e0dc",borderRadius:12,padding:"14px 12px"}}><div style={{fontSize:14,fontWeight:700,marginBottom:14}}>Como foi?</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}><Field label="Tempo"><input style={INP} value={tempo} onChange={e=>setTempo(e.target.value)} placeholder="06:45"/></Field><Field label="Calorias"><input style={INP} value={cal} onChange={e=>setCal(e.target.value)} inputMode="numeric" placeholder="87"/></Field></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}><Field label="Distancia"><input style={INP} value={dist} onChange={e=>setDist(e.target.value)} placeholder="1500m"/></Field><Field label="RPE (1-10)"><input style={INP} value={rpe} onChange={e=>setRpe(e.target.value)} inputMode="numeric" placeholder="8"/></Field></div><Field label="Observacoes"><textarea value={obs} onChange={e=>setObs(e.target.value)} placeholder="Sensacoes, estrategia..." style={{...INP,height:70,resize:"none"}}/></Field><div style={{display:"flex",gap:8,marginTop:6}}><button style={BTNCANCEL} onClick={()=>setFase("ativa")}>Voltar</button><button style={BTNOK} onClick={salvar}>Salvar</button></div></div>)}
+    {!isCoach&&feito&&(reg.tempo||reg.calorias||reg.distancia||reg.rpe||reg.obs)&&fase==="feito"&&(<div style={{margin:"0 14px 12px",background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px"}}><div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:reg.obs?6:0}}>{reg.tempo&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>⏱ {reg.tempo}</span>}{reg.calorias&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>🔥 {reg.calorias} cal</span>}{reg.distancia&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>📏 {reg.distancia}</span>}{reg.rpe&&<span style={{fontSize:12,background:"#fff",border:"1px solid #b5dcc7",borderRadius:6,padding:"3px 9px"}}>💪 RPE {reg.rpe}/10</span>}</div>{reg.obs&&<div style={{fontSize:12,color:"#555",lineHeight:1.6,marginTop:4}}>{reg.obs}</div>}<button onClick={desfazer} style={{marginTop:8,fontSize:11,color:"#ccc",background:"none",border:"none",padding:0,cursor:"pointer"}}>desfazer</button></div>)}
+  </div>);
+}
+
+function NovaSessaoBtn({diaId,addSessao,setAddSessao,ssNome,setSsNome,ssDesc,setSsDesc,onAdicionar}){
+  if(!addSessao||addSessao!==diaId){
+    return(<div style={{padding:"12px 14px 14px"}}><button onClick={()=>{setAddSessao(diaId);setSsNome("");setSsDesc("");}} style={{display:"block",width:"100%",padding:"12px 0",fontSize:14,fontWeight:700,borderRadius:12,border:"2px dashed #5b9bd5",background:"#e8f4ff",color:"#1a5a90",cursor:"pointer",letterSpacing:".01em"}}>＋ Nova sessao</button></div>);
+  }
+  return(<div style={{padding:"12px 14px 14px"}}><div style={{background:"#e8f4ff",border:"2px solid #5b9bd5",borderRadius:12,padding:"16px 14px"}}><div style={{fontSize:13,fontWeight:700,color:"#1a3a60",marginBottom:12,textTransform:"uppercase",letterSpacing:".06em"}}>Nova Sessao</div><Field label="Nome da sessao"><input style={INP} value={ssNome} onChange={e=>setSsNome(e.target.value)} placeholder="Ex: Wall Ball — For Time" autoFocus onKeyDown={e=>{if(e.key==="Enter")onAdicionar(diaId);}}/></Field><Field label="Descricao (opcional)"><textarea style={{...INP,height:80,resize:"none"}} value={ssDesc} onChange={e=>setSsDesc(e.target.value)} placeholder="Descreva o treino..."/></Field><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddSessao(null)}>Cancelar</button><button style={BTNOK} onClick={()=>onAdicionar(diaId)}>Criar sessao</button></div></div></div>);
 }
 
 function TreinosTab({db,update,isCoach}){
-  const [selAluno,setSelAluno]=useState(db.alunos[0]?.id);
-  const [selSemana,setSelSemana]=useState((db.semanas[db.alunos[0]?.id]||[])[0]?.id||null);
-  const [selDia,setSelDia]=useState(null);
-  const [addSessao,setAddSessao]=useState(null); // diaId sendo editado
-  const [ssNome,setSsNome]=useState("");
-  const [ssDesc,setSsDesc]=useState("");
+  const[selAluno,setSelAluno]=useState(db.alunos[0]?.id);
+  const[selSemana,setSelSemana]=useState((db.semanas[db.alunos[0]?.id]||[])[0]?.id||null);
+  const[selDia,setSelDia]=useState(null);
+  const[addSessao,setAddSessao]=useState(null);
+  const[ssNome,setSsNome]=useState("");
+  const[ssDesc,setSsDesc]=useState("");
   const dias=selSemana?db.dias[selSemana]||[]:[];
   const getProg=dId=>{const sss=db.sessoes[dId]||[];return{t:sss.length,d:sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length};};
   const prs=db.prs?.[selAluno]||{};
   const semAtual=db.semanas[selAluno]?.find(s=>(db.dias[s.id]||[]).some(d=>d.id===selDia));
-
-  const adicionarSessao=(diaId)=>{
-    if(!ssNome.trim())return;
-    const novoId=uid();
-    update(d=>{
-      if(!d.sessoes[diaId])d.sessoes[diaId]=[];
-      d.sessoes[diaId].push({id:novoId,nome:ssNome.trim(),desc:ssDesc.trim()||undefined});
-      if(!d.exercicios[novoId])d.exercicios[novoId]=[];
-    });
-    setSsNome("");setSsDesc("");setAddSessao(null);
-  };
-
-  const moverSessao=(diaId,idx,dir)=>{
-    update(d=>{
-      const arr=d.sessoes[diaId]||[];
-      const novo=idx+dir;
-      if(novo<0||novo>=arr.length)return;
-      [arr[idx],arr[novo]]=[arr[novo],arr[idx]];
-    });
-  };
-
-  const deletarSessao=(diaId,ssId)=>{
-    update(d=>{
-      d.sessoes[diaId]=(d.sessoes[diaId]||[]).filter(s=>s.id!==ssId);
-    });
-  };
-
-  return(
-    <div>
-      {isCoach&&<div style={{background:"#fffbf0",border:"1px solid #f0d080",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:16}}>✏️</span><span style={{fontSize:12,color:"#8a6a00"}}>Modo Coach — clique no nome da sessao para renomear. Use ↑↓ para reordenar e 🗑 para deletar.</span></div>}
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>{db.alunos.map(a=>(<Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>{setSelAluno(a.id);setSelSemana((db.semanas[a.id]||[])[0]?.id||null);setSelDia(null);}}/>))}</div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{(db.semanas[selAluno]||[]).map(s=>(<Pill key={s.id} label={s.nome} active={selSemana===s.id} onClick={()=>{setSelSemana(s.id);setSelDia(null);}}/>))}</div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {dias.map(d=>{
-          const{t,d:dn}=getProg(d.id);
-          const pct=t?Math.round((dn/t)*100):0;
-          const aberto=selDia===d.id;
-          const sessoes=db.sessoes[d.id]||[];
-          return(
-            <div key={d.id} style={{background:"#fff",border:aberto?"2px solid #1a1a1a":"1px solid #e8e8e5",borderRadius:14}}>
-              <div onClick={()=>setSelDia(aberto?null:d.id)} style={{padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
-                <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700}}>{d.nome}</div>{d.foco&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{d.foco}</div>}</div>
-                <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                  {!isCoach&&<div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:700,color:pct===100&&t>0?"#2a7a4b":"#1a1a1a"}}>{pct}%</div><div style={{fontSize:10,color:"#bbb"}}>{dn}/{t}</div></div>}
-                  <div style={{fontSize:16,color:"#bbb",transition:"transform .2s",transform:aberto?"rotate(180deg)":"none"}}>▾</div>
-                </div>
-              </div>
-              <div style={{height:3,background:"#f0f0ee",borderRadius:"0 0 0 0"}}><div style={{height:"100%",width:`${pct}%`,background:"#2a7a4b",transition:"width .3s",borderRadius:aberto?"0":"0 0 12px 12px"}}/></div>
-              {aberto&&(
-                <div>
-                  {semAtual?.obs&&<div style={{padding:"8px 14px",background:"#fffbf0",borderBottom:"1px solid #f0e8c0",display:"flex",gap:8,alignItems:"center"}}><span>📋</span><span style={{fontSize:12,color:"#8a6a00"}}>{semAtual.obs}</span></div>}
-                  {!isCoach&&dn===t&&t>0&&<div style={{padding:"10px 14px",background:"#edf7f2",display:"flex",gap:8,alignItems:"center",borderBottom:"1px solid #c8ead4"}}><span style={{fontSize:16}}>🎉</span><span style={{fontSize:13,fontWeight:600,color:"#2a7a4b"}}>Treino do dia concluido!</span></div>}
-                  {sessoes.map((ss,idx)=>(
-                    <SessaoBlock key={ss.id} ss={ss} exs={db.exercicios[ss.id]||[]} db={db} update={update} prs={prs} isCoach={isCoach}
-                      diaId={d.id} idx={idx} total={sessoes.length}
-                      onMover={(i,dir)=>moverSessao(d.id,i,dir)}
-                      onDeletar={(ssId)=>deletarSessao(d.id,ssId)}
-                    />
-                  ))}
-                  {/* COACH: adicionar nova sessão */}
-                  {isCoach&&(
-                    <div style={{padding:"10px 14px 14px"}}>
-                      {addSessao===d.id?(
-                        <div style={{background:"#f0f7ff",border:"1px solid #b0d0f0",borderRadius:12,padding:"14px 12px"}}>
-                          <div style={{fontSize:12,fontWeight:700,color:"#1a5a90",marginBottom:10,textTransform:"uppercase",letterSpacing:".05em"}}>Nova Sessao</div>
-                          <Field label="Nome da sessao"><input style={INP} value={ssNome} onChange={e=>setSsNome(e.target.value)} placeholder="Ex: Wall Ball — For Time" autoFocus onKeyDown={e=>{if(e.key==="Enter")adicionarSessao(d.id);}}/></Field>
-                          <Field label="Descricao (opcional)"><textarea style={{...INP,height:80,resize:"none"}} value={ssDesc} onChange={e=>setSsDesc(e.target.value)} placeholder="Descreva o treino..."/></Field>
-                          <div style={{display:"flex",gap:8}}>
-                            <button style={BTNCANCEL} onClick={()=>{setAddSessao(null);setSsNome("");setSsDesc("");}}>Cancelar</button>
-                            <button style={BTNOK} onClick={()=>adicionarSessao(d.id)}>+ Criar sessao</button>
-                          </div>
-                        </div>
-                      ):(
-                        <button onClick={()=>{setAddSessao(d.id);setSsNome("");setSsDesc("");}} style={{width:"100%",padding:"10px 0",fontSize:13,fontWeight:600,borderRadius:10,border:"1.5px dashed #90c0f0",background:"#f0f7ff",color:"#1a5a90",cursor:"pointer"}}>
-                          + Nova sessao
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+  const adicionarSessao=diaId=>{if(!ssNome.trim())return;const novoId=uid();update(d=>{if(!d.sessoes[diaId])d.sessoes[diaId]=[];d.sessoes[diaId].push({id:novoId,nome:ssNome.trim(),desc:ssDesc.trim()||undefined});if(!d.exercicios[novoId])d.exercicios[novoId]=[];});setSsNome("");setSsDesc("");setAddSessao(null);};
+  const moverSessao=(diaId,idx,dir)=>{update(d=>{const arr=d.sessoes[diaId]||[];const novo=idx+dir;if(novo<0||novo>=arr.length)return;[arr[idx],arr[novo]]=[arr[novo],arr[idx]];});};
+  const deletarSessao=(diaId,ssId)=>{update(d=>{d.sessoes[diaId]=(d.sessoes[diaId]||[]).filter(s=>s.id!==ssId);});};
+  return(<div>
+    {isCoach&&<div style={{background:"#fffbf0",border:"1px solid #f0d080",borderRadius:10,padding:"10px 14px",marginBottom:14,display:"flex",gap:8,alignItems:"center"}}><span>✏️</span><span style={{fontSize:12,color:"#8a6a00"}}>Coach — clique no nome para renomear · ↑↓ reordenar · 🗑 deletar · botao azul = nova sessao</span></div>}
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>{db.alunos.map(a=>(<Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>{setSelAluno(a.id);setSelSemana((db.semanas[a.id]||[])[0]?.id||null);setSelDia(null);}}/>))}</div>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{(db.semanas[selAluno]||[]).map(s=>(<Pill key={s.id} label={s.nome} active={selSemana===s.id} onClick={()=>{setSelSemana(s.id);setSelDia(null);}}/>))}</div>
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      {dias.map(d=>{
+        const{t,d:dn}=getProg(d.id);const pct=t?Math.round((dn/t)*100):0;
+        const aberto=selDia===d.id;const sessoes=db.sessoes[d.id]||[];
+        return(<div key={d.id} style={{background:"#fff",border:aberto?"2px solid #1a1a1a":"1px solid #e8e8e5",borderRadius:14}}>
+          <div onClick={()=>setSelDia(aberto?null:d.id)} style={{padding:"13px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,borderRadius:aberto?"14px 14px 0 0":"14px"}}>
+            <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700}}>{d.nome}</div>{d.foco&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{d.foco}</div>}</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              {!isCoach&&<div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:700,color:pct===100&&t>0?"#2a7a4b":"#1a1a1a"}}>{pct}%</div><div style={{fontSize:10,color:"#bbb"}}>{dn}/{t}</div></div>}
+              <div style={{fontSize:16,color:"#bbb",transition:"transform .2s",transform:aberto?"rotate(180deg)":"none"}}>▾</div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+          <div style={{height:3,background:"#f0f0ee",borderRadius:aberto?"0":"0 0 12px 12px"}}><div style={{height:"100%",width:`${pct}%`,background:"#2a7a4b",transition:"width .3s",borderRadius:"0 0 0 12px"}}/></div>
+          {aberto&&(<div>
+            {semAtual?.obs&&<div style={{padding:"8px 14px",background:"#fffbf0",borderBottom:"1px solid #f0e8c0",display:"flex",gap:8,alignItems:"center"}}><span>📋</span><span style={{fontSize:12,color:"#8a6a00"}}>{semAtual.obs}</span></div>}
+            {!isCoach&&dn===t&&t>0&&<div style={{padding:"10px 14px",background:"#edf7f2",display:"flex",gap:8,alignItems:"center",borderBottom:"1px solid #c8ead4"}}><span style={{fontSize:16}}>🎉</span><span style={{fontSize:13,fontWeight:600,color:"#2a7a4b"}}>Treino do dia concluido!</span></div>}
+            {sessoes.map((ss,idx)=>(<SessaoBlock key={ss.id} ss={ss} exs={db.exercicios[ss.id]||[]} db={db} update={update} prs={prs} isCoach={isCoach} diaId={d.id} idx={idx} total={sessoes.length} onMover={(i,dir)=>moverSessao(d.id,i,dir)} onDeletar={ssId=>deletarSessao(d.id,ssId)}/>))}
+            {isCoach&&<NovaSessaoBtn diaId={d.id} addSessao={addSessao} setAddSessao={setAddSessao} ssNome={ssNome} setSsNome={setSsNome} ssDesc={ssDesc} setSsDesc={setSsDesc} onAdicionar={adicionarSessao}/>}
+          </div>)}
+        </div>);
+      })}
     </div>
-  );
+  </div>);
 }
 
-const PR_DEFS={
-  back_squat:{nome:"Back Squat 1RM",unidade:"kg",icon:"🏋️"},
-  deadlift:{nome:"Deadlift 1RM",unidade:"kg",icon:"⬆️"},
-  front_squat:{nome:"Front Squat 1RM",unidade:"kg",icon:"🏋️"},
-  press:{nome:"Shoulder Press 1RM",unidade:"kg",icon:"💪"},
-  remo:{nome:"Remo",unidade:"seg",icon:"🚣"},
-  ski:{nome:"SkiErg",unidade:"seg",icon:"⛷"},
-  assault:{nome:"Assault Bike",unidade:"seg",icon:"🚴"},
-};
+const PR_DEFS={back_squat:{nome:"Back Squat 1RM",unidade:"kg",icon:"🏋️"},deadlift:{nome:"Deadlift 1RM",unidade:"kg",icon:"⬆️"},front_squat:{nome:"Front Squat 1RM",unidade:"kg",icon:"🏋️"},press:{nome:"Shoulder Press 1RM",unidade:"kg",icon:"💪"},remo:{nome:"Remo",unidade:"seg",icon:"🚣"},ski:{nome:"SkiErg",unidade:"seg",icon:"⛷"},assault:{nome:"Assault Bike",unidade:"seg",icon:"🚴"}};
 
 function PRsTab({db,update}){
-  const [selAluno,setSelAluno]=useState(db.alunos[0]?.id);
-  const [editKey,setEditKey]=useState(null);
-  const [vKg,setVKg]=useState("");
-  const [vMM,setVMM]=useState("");const [vSS,setVSS]=useState("");
-  const [vDist,setVDist]=useState("");const [vCal,setVCal]=useState("");
-  const [alvoTipo,setAlvoTipo]=useState("pct");const [alvoPct,setAlvoPct]=useState("5");
-  const [alvoMM,setAlvoMM]=useState("");const [alvoSS,setAlvoSS]=useState("");
-  const [vProt,setVProt]=useState("");
-  const prs=db.prs?.[selAluno]||{};
-  const def=editKey?PR_DEFS[editKey]:null;
-  const isTimePR=def?.unidade==="seg";
-  const isAssaultPR=editKey==="assault";
+  const[selAluno,setSelAluno]=useState(db.alunos[0]?.id);const[editKey,setEditKey]=useState(null);const[vKg,setVKg]=useState("");const[vMM,setVMM]=useState("");const[vSS,setVSS]=useState("");const[vDist,setVDist]=useState("");const[vCal,setVCal]=useState("");const[alvoTipo,setAlvoTipo]=useState("pct");const[alvoPct,setAlvoPct]=useState("5");const[alvoMM,setAlvoMM]=useState("");const[alvoSS,setAlvoSS]=useState("");const[vProt,setVProt]=useState("");
+  const prs=db.prs?.[selAluno]||{};const def=editKey?PR_DEFS[editKey]:null;const isTimePR=def?.unidade==="seg";const isAssaultPR=editKey==="assault";
   const openEdit=(key,pr)=>{setEditKey(key);if(PR_DEFS[key].unidade==="kg"){setVKg(pr?.valor?String(pr.valor):"");}else{setVMM(pr?.valor?String(Math.floor(pr.valor/60)):"");setVSS(pr?.valor?String(pr.valor%60):"");setVDist(pr?.dist?String(pr.dist):"");setVCal(pr?.cal?String(pr.cal):"");setAlvoTipo(pr?.alvoTipo||"pct");setAlvoPct(String(pr?.alvoPct||5));setAlvoMM(pr?.alvoTempo?String(Math.floor(pr.alvoTempo/60)):"");setAlvoSS(pr?.alvoTempo?String(pr.alvoTempo%60):"");setVProt(pr?.protocolo||"");}};
   const closeEdit=()=>setEditKey(null);
-  const savePR=()=>{
-    if(def.unidade==="kg"){const val=parseFloat(vKg);if(!val)return;update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:val,unidade:"kg",nome:def.nome};});}
-    else{const sec=toSec(vMM,vSS);if(!sec)return;const isA=editKey==="assault";update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:sec,unidade:"seg",nome:def.nome,dist:!isA?(parseInt(vDist)||undefined):undefined,cal:isA?(parseInt(vCal)||undefined):undefined,alvoTipo,alvoPct:alvoTipo==="pct"?parseInt(alvoPct)||5:undefined,alvoTempo:alvoTipo==="tempo"?(toSec(alvoMM,alvoSS)||undefined):undefined,protocolo:isA?(vProt.trim()||undefined):undefined};});}
-    closeEdit();
-  };
-  const previewSec=toSec(vMM,vSS);
-  const previewPace=!isAssaultPR&&previewSec&&parseInt(vDist)?Math.round(previewSec/(parseInt(vDist)/500)):0;
-  const previewCPM=isAssaultPR&&previewSec&&parseInt(vCal)?(parseInt(vCal)/(previewSec/60)):0;
-  return(
-    <div>
-      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{db.alunos.map(a=><Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>setSelAluno(a.id)}/>)}</div>
-      <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Cargas — 1RM</div>
-      {["back_squat","deadlift","front_squat","press"].map(key=>{
-        const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;
-        return(
-          <div key={key} style={{...CARD,padding:"12px 14px",display:"flex",alignItems:"flex-start",gap:12}}>
-            <div style={{fontSize:26,width:36,textAlign:"center",paddingTop:2}}>{d.icon}</div>
-            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?(<><div style={{fontSize:20,fontWeight:700,color:"#2a7a4b",marginTop:2}}>{val} kg</div><div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><span key={p} style={{fontSize:11,background:"#f0f0ee",borderRadius:6,padding:"2px 7px",color:"#555"}}>{p}%={round25(val*p/100)}kg</span>)}</div></>):<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div>
-            <button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button>
-          </div>
-        );
-      })}
-      <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10,marginTop:4}}>Maquinas</div>
-      {["remo","ski","assault"].map(key=>{
-        const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;
-        const isA=key==="assault";
-        const pace500=val&&!isA&&pr?.dist?Math.round(val/(pr.dist/500)):0;
-        const calMin=val&&isA&&pr?.cal?(pr.cal/(val/60)):0;
-        const alvoSec=pr?.alvoTempo||0;const alvoPctV=pr?.alvoPct||5;
-        const p5Alvo=pace500>0?(alvoSec>0?Math.round(alvoSec/(pr.dist/500)):Math.round(pace500*(1-alvoPctV/100))):0;
-        const cpmAlvo=calMin>0?(alvoSec>0?(pr.cal/(alvoSec/60)):calMin*(1+alvoPctV/100)):0;
-        const protocolo=(pr?.protocolo||"").split(",").map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);
-        const abAlvoSec=cpmAlvo&&pr?.cal?(pr.cal/cpmAlvo)*60:0;
-        return(
-          <div key={key} style={{...CARD,padding:"12px 14px"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:val>0?12:0}}>
-              <div style={{fontSize:26,width:36,textAlign:"center"}}>{d.icon}</div>
-              <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?<div style={{fontSize:18,fontWeight:700,color:"#2a7a4b",marginTop:1}}>{isA?`${pr?.cal||"?"}cal em `:""}{fmtMMSS(val)}{!isA&&pr?.dist?<span style={{fontSize:12,fontWeight:400,color:"#888",marginLeft:6}}>({pr.dist}m)</span>:null}</div>:<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div>
-              <button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button>
-            </div>
-            {val>0&&!isA&&pace500>0&&(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                {[{l:"Pace/500m",v:fmtMMSS(pace500),g:false},{l:"Alvo",v:fmtMMSS(p5Alvo),g:true},{l:"Z2 (+10%)",v:fmtMMSS(Math.round(pace500*1.1)),g:false}].map(x=>(
-                  <div key={x.l} style={{background:x.g?"rgba(42,122,75,.1)":"#f5f5f3",borderRadius:8,padding:"8px",textAlign:"center"}}>
-                    <div style={{fontSize:10,color:x.g?"#2a7a4b":"#888"}}>{x.l}</div>
-                    <div style={{fontSize:14,fontWeight:700,color:x.g?"#2a7a4b":"#1a1a1a"}}>{x.v}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {val>0&&isA&&calMin>0&&(
-              <div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-                  <div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:22,fontWeight:700}}>{calMin.toFixed(1)}</div><div style={{fontSize:11,color:"#888"}}>{pr.cal}cal em {fmtMMSS(val)}</div></div>
-                  <div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:22,fontWeight:700,color:"#2a7a4b"}}>{cpmAlvo.toFixed(1)}</div><div style={{fontSize:11,color:"#2a7a4b"}}>{pr.cal}cal em {fmtMMSS(Math.round(abAlvoSec))}</div></div>
-                </div>
-                {protocolo.length>0&&protocolo.map((c,i)=>{const tA=cpmAlvo>0?Math.round(c/cpmAlvo*60):0;return(<div key={i} style={{display:"flex",justifyContent:"space-between",background:"#f5f5f3",borderRadius:8,padding:"7px 10px",marginBottom:4}}><span style={{fontSize:13,color:"#555"}}>Round {i+1} <span style={{fontWeight:700,color:"#2a7a4b"}}>{c} cal</span></span><span style={{fontSize:14,fontWeight:700}}>{tA>0?fmtMMSS(tA):"—"}</span></div>);})}
-              </div>
-            )}
-          </div>
-        );
-      })}
-      <Sheet open={!!editKey&&!isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}>
-        <Field label="Carga 1RM (kg)"><input style={INP} value={vKg} onChange={e=>setVKg(e.target.value)} inputMode="decimal" placeholder="Ex: 90"/></Field>
-        {vKg&&!isNaN(parseFloat(vKg))&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><div key={p} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 6px"}}><span style={{color:"#888"}}>{p}%</span><span style={{fontWeight:700}}>{round25(parseFloat(vKg)*p/100)} kg</span></div>)}</div>}
-        <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div>
-      </Sheet>
-      <Sheet open={!!editKey&&isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}>
-        {!isAssaultPR&&<Field label="Distancia (m)"><input style={INP} value={vDist} onChange={e=>setVDist(e.target.value)} inputMode="numeric" placeholder="Ex: 2000"/></Field>}
-        {isAssaultPR&&<Field label="Calorias realizadas"><input style={INP} value={vCal} onChange={e=>setVCal(e.target.value)} inputMode="numeric" placeholder="Ex: 50"/></Field>}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-          <Field label="Tempo (mm)"><input style={INP} value={vMM} onChange={e=>setVMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field>
-          <Field label="Tempo (ss)"><input style={INP} value={vSS} onChange={e=>setVSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field>
-        </div>
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:"#aaa",marginBottom:8}}>Melhora alvo</div>
-          <div style={{display:"flex",gap:6,marginBottom:10}}>
-            <button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button>
-            <button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button>
-          </div>
-          {alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={alvoPct} onChange={e=>setAlvoPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}
-          {alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}
-        </div>
-        {isAssaultPR&&<Field label="Protocolo (cal por round, separados por virgula)"><input style={INP} value={vProt} onChange={e=>setVProt(e.target.value)} placeholder="Ex: 12,11,10,9,8,7,6,5"/></Field>}
-        {previewSec>0&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:13}}><strong>{fmtMMSS(previewSec)}</strong>{!isAssaultPR&&previewPace>0&&<span style={{color:"#555",marginLeft:10}}>{fmtMMSS(previewPace)}/500m</span>}{isAssaultPR&&previewCPM>0&&<span style={{color:"#555",marginLeft:10}}>{previewCPM.toFixed(1)} cal/min</span>}</div>}
-        <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div>
-      </Sheet>
-    </div>
-  );
+  const savePR=()=>{if(def.unidade==="kg"){const val=parseFloat(vKg);if(!val)return;update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:val,unidade:"kg",nome:def.nome};});}else{const sec=toSec(vMM,vSS);if(!sec)return;const isA=editKey==="assault";update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:sec,unidade:"seg",nome:def.nome,dist:!isA?(parseInt(vDist)||undefined):undefined,cal:isA?(parseInt(vCal)||undefined):undefined,alvoTipo,alvoPct:alvoTipo==="pct"?parseInt(alvoPct)||5:undefined,alvoTempo:alvoTipo==="tempo"?(toSec(alvoMM,alvoSS)||undefined):undefined,protocolo:isA?(vProt.trim()||undefined):undefined};});}closeEdit();};
+  const previewSec=toSec(vMM,vSS);const previewPace=!isAssaultPR&&previewSec&&parseInt(vDist)?Math.round(previewSec/(parseInt(vDist)/500)):0;const previewCPM=isAssaultPR&&previewSec&&parseInt(vCal)?(parseInt(vCal)/(previewSec/60)):0;
+  return(<div>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{db.alunos.map(a=><Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>setSelAluno(a.id)}/>)}</div>
+    <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Cargas — 1RM</div>
+    {["back_squat","deadlift","front_squat","press"].map(key=>{const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;return(<div key={key} style={{...CARD,padding:"12px 14px",display:"flex",alignItems:"flex-start",gap:12}}><div style={{fontSize:26,width:36,textAlign:"center",paddingTop:2}}>{d.icon}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?(<><div style={{fontSize:20,fontWeight:700,color:"#2a7a4b",marginTop:2}}>{val} kg</div><div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><span key={p} style={{fontSize:11,background:"#f0f0ee",borderRadius:6,padding:"2px 7px",color:"#555"}}>{p}%={round25(val*p/100)}kg</span>)}</div></>):<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div><button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button></div>);})}
+    <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10,marginTop:4}}>Maquinas</div>
+    {["remo","ski","assault"].map(key=>{const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;const isA=key==="assault";const pace500=val&&!isA&&pr?.dist?Math.round(val/(pr.dist/500)):0;const calMin=val&&isA&&pr?.cal?(pr.cal/(val/60)):0;const alvoSec=pr?.alvoTempo||0;const alvoPctV=pr?.alvoPct||5;const p5Alvo=pace500>0?(alvoSec>0?Math.round(alvoSec/(pr.dist/500)):Math.round(pace500*(1-alvoPctV/100))):0;const cpmAlvo=calMin>0?(alvoSec>0?(pr.cal/(alvoSec/60)):calMin*(1+alvoPctV/100)):0;const protocolo=(pr?.protocolo||"").split(",").map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);const abAlvoSec=cpmAlvo&&pr?.cal?(pr.cal/cpmAlvo)*60:0;return(<div key={key} style={{...CARD,padding:"12px 14px"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:val>0?12:0}}><div style={{fontSize:26,width:36,textAlign:"center"}}>{d.icon}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?<div style={{fontSize:18,fontWeight:700,color:"#2a7a4b",marginTop:1}}>{isA?`${pr?.cal||"?"}cal em `:""}{fmtMMSS(val)}{!isA&&pr?.dist?<span style={{fontSize:12,fontWeight:400,color:"#888",marginLeft:6}}>({pr.dist}m)</span>:null}</div>:<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div><button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button></div>{val>0&&!isA&&pace500>0&&(<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>{[{l:"Pace/500m",v:fmtMMSS(pace500),g:false},{l:"Alvo",v:fmtMMSS(p5Alvo),g:true},{l:"Z2 (+10%)",v:fmtMMSS(Math.round(pace500*1.1)),g:false}].map(x=>(<div key={x.l} style={{background:x.g?"rgba(42,122,75,.1)":"#f5f5f3",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:10,color:x.g?"#2a7a4b":"#888"}}>{x.l}</div><div style={{fontSize:14,fontWeight:700,color:x.g?"#2a7a4b":"#1a1a1a"}}>{x.v}</div></div>))}</div>)}{val>0&&isA&&calMin>0&&(<div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}><div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:22,fontWeight:700}}>{calMin.toFixed(1)}</div><div style={{fontSize:11,color:"#888"}}>{pr.cal}cal em {fmtMMSS(val)}</div></div><div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:22,fontWeight:700,color:"#2a7a4b"}}>{cpmAlvo.toFixed(1)}</div><div style={{fontSize:11,color:"#2a7a4b"}}>{pr.cal}cal em {fmtMMSS(Math.round(abAlvoSec))}</div></div></div>{protocolo.length>0&&protocolo.map((c,i)=>{const tA=cpmAlvo>0?Math.round(c/cpmAlvo*60):0;return(<div key={i} style={{display:"flex",justifyContent:"space-between",background:"#f5f5f3",borderRadius:8,padding:"7px 10px",marginBottom:4}}><span style={{fontSize:13,color:"#555"}}>Round {i+1} <strong style={{color:"#2a7a4b"}}>{c} cal</strong></span><span style={{fontSize:14,fontWeight:700}}>{tA>0?fmtMMSS(tA):"—"}</span></div>);})}</div>)}</div>);})}
+    <Sheet open={!!editKey&&!isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}><Field label="Carga 1RM (kg)"><input style={INP} value={vKg} onChange={e=>setVKg(e.target.value)} inputMode="decimal" placeholder="Ex: 90"/></Field>{vKg&&!isNaN(parseFloat(vKg))&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><div key={p} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 6px"}}><span style={{color:"#888"}}>{p}%</span><span style={{fontWeight:700}}>{round25(parseFloat(vKg)*p/100)} kg</span></div>)}</div>}<div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div></Sheet>
+    <Sheet open={!!editKey&&isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}>{!isAssaultPR&&<Field label="Distancia (m)"><input style={INP} value={vDist} onChange={e=>setVDist(e.target.value)} inputMode="numeric" placeholder="Ex: 2000"/></Field>}{isAssaultPR&&<Field label="Calorias realizadas"><input style={INP} value={vCal} onChange={e=>setVCal(e.target.value)} inputMode="numeric" placeholder="Ex: 50"/></Field>}<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Field label="Tempo (mm)"><input style={INP} value={vMM} onChange={e=>setVMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field><Field label="Tempo (ss)"><input style={INP} value={vSS} onChange={e=>setVSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field></div><div style={{marginBottom:14}}><div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",color:"#aaa",marginBottom:8}}>Melhora alvo</div><div style={{display:"flex",gap:6,marginBottom:10}}><button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button><button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button></div>{alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={alvoPct} onChange={e=>setAlvoPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}{alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}</div>{isAssaultPR&&<Field label="Protocolo (cal por round, separados por virgula)"><input style={INP} value={vProt} onChange={e=>setVProt(e.target.value)} placeholder="Ex: 12,11,10,9,8,7,6,5"/></Field>}{previewSec>0&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:13}}><strong>{fmtMMSS(previewSec)}</strong>{!isAssaultPR&&previewPace>0&&<span style={{color:"#555",marginLeft:10}}>{fmtMMSS(previewPace)}/500m</span>}{isAssaultPR&&previewCPM>0&&<span style={{color:"#555",marginLeft:10}}>{previewCPM.toFixed(1)} cal/min</span>}</div>}<div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div></Sheet>
+  </div>);
 }
 
 function ProgressoTab({db}){
-  return(
-    <div>
-      {db.alunos.map(a=>{
-        const sems=db.semanas[a.id]||[];let te=0,de=0;
-        sems.forEach(s=>(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];te+=sss.length;de+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;}));
-        return(
-          <div key={a.id} style={{...CARD,padding:0,overflow:"hidden"}}>
-            <div style={{padding:"14px 16px",borderBottom:"1px solid #f2f2f0"}}><div style={{fontSize:16,fontWeight:700}}>{a.nome}</div>{a.objetivo&&<div style={{fontSize:13,color:"#888",marginTop:2}}>Objetivo: {a.objetivo}</div>}</div>
-            <div style={{padding:"14px 16px"}}>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>
-                {[{n:sems.length,l:"Semanas"},{n:te,l:"Sessoes"},{n:te?Math.round((de/te)*100)+"%":"0%",l:"Concluido"}].map(s=>(<div key={s.l} style={{background:"#f5f5f3",borderRadius:10,padding:10,textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>{s.n}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{s.l}</div></div>))}
-              </div>
-              {sems.map(s=>{let st=0,sd=0;(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];st+=sss.length;sd+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;});return(<div key={s.id} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:5}}><span style={{fontWeight:600}}>{s.nome}</span><span style={{color:"#888"}}>{sd}/{st}</span></div><ProgBar done={sd} total={st} height={5}/></div>);})}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  return(<div>{db.alunos.map(a=>{const sems=db.semanas[a.id]||[];let te=0,de=0;sems.forEach(s=>(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];te+=sss.length;de+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;}));return(<div key={a.id} style={{...CARD,padding:0,overflow:"hidden"}}><div style={{padding:"14px 16px",borderBottom:"1px solid #f2f2f0"}}><div style={{fontSize:16,fontWeight:700}}>{a.nome}</div>{a.objetivo&&<div style={{fontSize:13,color:"#888",marginTop:2}}>Objetivo: {a.objetivo}</div>}</div><div style={{padding:"14px 16px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>{[{n:sems.length,l:"Semanas"},{n:te,l:"Sessoes"},{n:te?Math.round((de/te)*100)+"%":"0%",l:"Concluido"}].map(s=>(<div key={s.l} style={{background:"#f5f5f3",borderRadius:10,padding:10,textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>{s.n}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{s.l}</div></div>))}</div>{sems.map(s=>{let st=0,sd=0;(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];st+=sss.length;sd+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;});return(<div key={s.id} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:5}}><span style={{fontWeight:600}}>{s.nome}</span><span style={{color:"#888"}}>{sd}/{st}</span></div><div style={{height:5,background:"#f0f0ee",borderRadius:99}}><div style={{height:"100%",width:st?`${Math.round(sd/st*100)}%`:"0%",background:"#2a7a4b",borderRadius:99,transition:"width .3s"}}/></div></div>);})}</div></div>);})}</div>);
 }
 
-const ESTACOES=[
-  {id:"ski",nome:"SkiErg",dist:"1000m",icone:"⛷"},{id:"sled_push",nome:"Sled Push",dist:"50m",icone:"🛷"},
-  {id:"sled_pull",nome:"Sled Pull",dist:"50m",icone:"🔗"},{id:"burpee",nome:"Burpee Broad Jump",dist:"80m",icone:"🏃"},
-  {id:"row",nome:"Rowing",dist:"1000m",icone:"🚣"},{id:"farmers",nome:"Farmer's Carry",dist:"200m",icone:"💪"},
-  {id:"lunge",nome:"Sandbag Lunge",dist:"100m",icone:"🎒"},{id:"wallball",nome:"Wall Ball",dist:"100 reps",icone:"🏀"},
-];
+const ESTACOES=[{id:"ski",nome:"SkiErg",dist:"1000m",icone:"⛷"},{id:"sled_push",nome:"Sled Push",dist:"50m",icone:"🛷"},{id:"sled_pull",nome:"Sled Pull",dist:"50m",icone:"🔗"},{id:"burpee",nome:"Burpee Broad Jump",dist:"80m",icone:"🏃"},{id:"row",nome:"Rowing",dist:"1000m",icone:"🚣"},{id:"farmers",nome:"Farmer's Carry",dist:"200m",icone:"💪"},{id:"lunge",nome:"Sandbag Lunge",dist:"100m",icone:"🎒"},{id:"wallball",nome:"Wall Ball",dist:"100 reps",icone:"🏀"}];
 
 function HyroxTab(){
-  const KEY="hyroxM10";
-  const [data,setData]=useState(()=>{try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):{};}catch{return{};}});
-  const [edit,setEdit]=useState(null);const [mm,setMM]=useState("");const [ss,setSS]=useState("");
+  const KEY="hyroxM10";const[data,setData]=useState(()=>{try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):{};}catch{return{};}});const[edit,setEdit]=useState(null);const[mm,setMM]=useState("");const[ss,setSS]=useState("");
   const save=id=>{const sec=toSec(mm,ss);if(!sec)return;const n={...data,[id]:{tempo:sec}};setData(n);try{localStorage.setItem(KEY,JSON.stringify(n));}catch{}setEdit(null);setMM("");setSS("");};
   const total=Object.values(data).reduce((a,v)=>a+(v?.tempo||0),0);
-  return(
-    <div>
-      <div style={{...CARD,background:"#1a1a1a",color:"#fff",textAlign:"center",padding:"20px 16px"}}>
-        <div style={{fontSize:11,color:"#666",marginBottom:4,textTransform:"uppercase",letterSpacing:".1em"}}>Tempo Total Estimado</div>
-        <div style={{fontSize:42,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtMMSS(total)}</div>
-        <div style={{fontSize:12,color:"#555",marginTop:4}}>{Object.keys(data).length}/8 estacoes</div>
-      </div>
-      {ESTACOES.map(e=>{
-        const sec=data[e.id]?.tempo||0;
-        return(
-          <div key={e.id} style={{...CARD,display:"flex",alignItems:"center",gap:12,padding:"12px 14px"}}>
-            <div style={{fontSize:28,width:40,textAlign:"center"}}>{e.icone}</div>
-            <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{e.nome}</div><div style={{fontSize:11,color:"#888"}}>{e.dist}</div>{sec>0&&<div style={{fontSize:14,color:"#2a7a4b",fontWeight:700,marginTop:2}}>{fmtMMSS(sec)}</div>}</div>
-            {edit===e.id?(
-              <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                <input value={mm} onChange={x=>setMM(x.target.value)} placeholder="mm" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/>
-                <span>:</span>
-                <input value={ss} onChange={x=>setSS(x.target.value)} placeholder="ss" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/>
-                <button onClick={()=>save(e.id)} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button>
-              </div>
-            ):(
-              <button onClick={()=>{setEdit(e.id);if(sec){setMM(String(Math.floor(sec/60)));setSS(String(sec%60));}}} style={{padding:"7px 14px",fontSize:13,borderRadius:8,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",whiteSpace:"nowrap"}}>{sec>0?"Editar":"+ Tempo"}</button>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
+  return(<div><div style={{...CARD,background:"#1a1a1a",color:"#fff",textAlign:"center",padding:"20px 16px"}}><div style={{fontSize:11,color:"#666",marginBottom:4,textTransform:"uppercase",letterSpacing:".1em"}}>Tempo Total Estimado</div><div style={{fontSize:42,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtMMSS(total)}</div><div style={{fontSize:12,color:"#555",marginTop:4}}>{Object.keys(data).length}/8 estacoes</div></div>{ESTACOES.map(e=>{const sec=data[e.id]?.tempo||0;return(<div key={e.id} style={{...CARD,display:"flex",alignItems:"center",gap:12,padding:"12px 14px"}}><div style={{fontSize:28,width:40,textAlign:"center"}}>{e.icone}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{e.nome}</div><div style={{fontSize:11,color:"#888"}}>{e.dist}</div>{sec>0&&<div style={{fontSize:14,color:"#2a7a4b",fontWeight:700,marginTop:2}}>{fmtMMSS(sec)}</div>}</div>{edit===e.id?(<div style={{display:"flex",gap:4,alignItems:"center"}}><input value={mm} onChange={x=>setMM(x.target.value)} placeholder="mm" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/><span>:</span><input value={ss} onChange={x=>setSS(x.target.value)} placeholder="ss" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/><button onClick={()=>save(e.id)} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button></div>):(<button onClick={()=>{setEdit(e.id);if(sec){setMM(String(Math.floor(sec/60)));setSS(String(sec%60));}}} style={{padding:"7px 14px",fontSize:13,borderRadius:8,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",whiteSpace:"nowrap"}}>{sec>0?"Editar":"+ Tempo"}</button>)}</div>);})}</div>);
 }
 
-const PACE_DUR=[
-  {label:"12 min",sec:720},{label:"10 min",sec:600},{label:"8 min",sec:480},{label:"6 min",sec:360},
-  {label:"4 min",sec:240},{label:"3 min",sec:180},{label:"2 min",sec:120},{label:"1m30",sec:90},
-  {label:"1 min",sec:60},{label:"45s",sec:45},{label:"30s",sec:30},{label:"15s",sec:15},
-];
+const PACE_DUR=[{label:"12 min",sec:720},{label:"10 min",sec:600},{label:"8 min",sec:480},{label:"6 min",sec:360},{label:"4 min",sec:240},{label:"3 min",sec:180},{label:"2 min",sec:120},{label:"1m30",sec:90},{label:"1 min",sec:60},{label:"45s",sec:45},{label:"30s",sec:30},{label:"15s",sec:15}];
 
 function PaceTab(){
-  const [modo,setModo]=useState("remo");
-  const [mm,setMM]=useState("");const [ss,setSS]=useState("");const [dist,setDist]=useState("");
-  const [alvoTipo,setAlvoTipo]=useState("pct");const [pct,setPct]=useState("5");
-  const [alvoMM,setAlvoMM]=useState("");const [alvoSS,setAlvoSS]=useState("");
-  const [abCal,setAbCal]=useState("");const [abMM,setAbMM]=useState("");const [abSS,setAbSS]=useState("");
-  const [abAlvoTipo,setAbAlvoTipo]=useState("pct");const [abPct,setAbPct]=useState("5");
-  const [abAlvoMM,setAbAlvoMM]=useState("");const [abAlvoSS,setAbAlvoSS]=useState("");
-  const baseSec=toSec(mm,ss);const baseDistM=parseInt(dist)||0;
-  const basePace500=baseSec&&baseDistM?(baseSec/(baseDistM/500)):0;
-  const alvoSec2=alvoTipo==="tempo"?toSec(alvoMM,alvoSS):0;
-  const alvo=basePace500>0?(alvoSec2>0?(alvoSec2/(baseDistM/500)):basePace500*(1-parseInt(pct||0)/100)):0;
-  const abSec=toSec(abMM,abSS);const abTargetCal=parseInt(abCal)||0;
-  const abCPM=abSec&&abTargetCal?(abTargetCal/(abSec/60)):0;
-  const abAlvoSec2=abAlvoTipo==="tempo"?toSec(abAlvoMM,abAlvoSS):0;
-  const abCPMAlvo=abCPM>0?(abAlvoSec2>0?(abTargetCal/(abAlvoSec2/60)):abCPM*(1+parseInt(abPct||0)/100)):0;
-  const abAlvoSecFinal=abCPMAlvo?(abTargetCal/abCPMAlvo)*60:0;
-  return(
-    <div>
-      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
-        {[{id:"remo",l:"Remo"},{id:"ski",l:"SkiErg"},{id:"assault",l:"Assault Bike"}].map(m=>(<Pill key={m.id} label={m.l} active={modo===m.id} onClick={()=>setModo(m.id)}/>))}
-      </div>
-      {(modo==="remo"||modo==="ski")&&(
-        <div>
-          <div style={CARD}>
-            <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Resultado do teste</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}>
-              <Field label="Distancia (m)"><input style={INP} value={dist} onChange={e=>setDist(e.target.value)} inputMode="numeric" placeholder="2000"/></Field>
-              <Field label="Tempo (mm)"><input style={INP} value={mm} onChange={e=>setMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field>
-              <Field label="Tempo (ss)"><input style={INP} value={ss} onChange={e=>setSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field>
-            </div>
-            <div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:"#aaa",marginBottom:8}}>Melhora alvo</div>
-            <div style={{display:"flex",gap:6,marginBottom:10}}>
-              <button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button>
-              <button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button>
-            </div>
-            {alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={pct} onChange={e=>setPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}
-            {alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}
-          </div>
-          {basePace500>0&&alvo>0&&(
-            <div style={CARD}>
-              <div style={{fontSize:14,fontWeight:700,marginBottom:12}}>{modo==="ski"?"SkiErg":"Remo"} — Pace/500m</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-                <div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:26,fontWeight:700}}>{fmtMMSS(Math.round(basePace500))}</div></div>
-                <div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:26,fontWeight:700,color:"#2a7a4b"}}>{fmtMMSS(Math.round(alvo))}</div></div>
-              </div>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                <thead><tr>{["Duracao","Dist Atual","Dist Alvo"].map(h=><th key={h} style={{textAlign:"left",padding:"5px 6px",color:"#888",fontWeight:600,fontSize:11,borderBottom:"1px solid #f0f0ee"}}>{h}</th>)}</tr></thead>
-                <tbody>{PACE_DUR.map(t=>{const dA=Math.round(t.sec/basePace500*500);const dAl=Math.round(t.sec/alvo*500);return(<tr key={t.sec} style={{borderBottom:"1px solid #f8f8f6"}}><td style={{padding:"6px 6px",fontWeight:500}}>{t.label}</td><td style={{padding:"6px 6px",color:"#555"}}>{dA}m</td><td style={{padding:"6px 6px",color:"#2a7a4b",fontWeight:600}}>{dAl}m</td></tr>);})}</tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-      {modo==="assault"&&(
-        <div>
-          <div style={CARD}>
-            <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Assault Bike</div>
-            <div style={{fontSize:12,color:"#888",marginBottom:12}}>Tempo para atingir X calorias</div>
-            <Field label="Calorias realizadas"><input style={INP} value={abCal} onChange={e=>setAbCal(e.target.value)} inputMode="numeric" placeholder="50"/></Field>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-              <Field label="Tempo (mm)"><input style={INP} value={abMM} onChange={e=>setAbMM(e.target.value)} inputMode="numeric" placeholder="1"/></Field>
-              <Field label="Tempo (ss)"><input style={INP} value={abSS} onChange={e=>setAbSS(e.target.value)} inputMode="numeric" placeholder="45"/></Field>
-            </div>
-            <div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:"#aaa",marginBottom:8}}>Melhora alvo</div>
-            <div style={{display:"flex",gap:6,marginBottom:10}}>
-              <button onClick={()=>setAbAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:abAlvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:abAlvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button>
-              <button onClick={()=>setAbAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:abAlvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:abAlvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button>
-            </div>
-            {abAlvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={abPct} onChange={e=>setAbPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}
-            {abAlvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={abAlvoMM} onChange={e=>setAbAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={abAlvoSS} onChange={e=>setAbAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}
-          </div>
-          {abSec>0&&abCPM>0&&(
-            <div style={CARD}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-                <div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:24,fontWeight:700}}>{abCPM.toFixed(1)}</div><div style={{fontSize:11,color:"#888"}}>{abTargetCal}cal em {fmtMMSS(abSec)}</div></div>
-                <div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:24,fontWeight:700,color:"#2a7a4b"}}>{abCPMAlvo.toFixed(1)}</div><div style={{fontSize:11,color:"#2a7a4b"}}>{abTargetCal}cal em {fmtMMSS(Math.round(abAlvoSecFinal))}</div></div>
-              </div>
-              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-                <thead><tr>{["Duracao","Atual","Alvo"].map(h=><th key={h} style={{textAlign:"left",padding:"5px 6px",color:"#888",fontWeight:600,fontSize:11,borderBottom:"1px solid #f0f0ee"}}>{h}</th>)}</tr></thead>
-                <tbody>{[{l:"30s",s:30},{l:"45s",s:45},{l:"1 min",s:60},{l:"2 min",s:120},{l:"4 min",s:240},{l:"6 min",s:360},{l:"8 min",s:480},{l:"10 min",s:600},{l:"12 min",s:720}].map(t=>(<tr key={t.s} style={{borderBottom:"1px solid #f8f8f6"}}><td style={{padding:"5px 6px",fontWeight:500}}>{t.l}</td><td style={{padding:"5px 6px",color:"#555"}}>{Math.round(abCPM*(t.s/60))}</td><td style={{padding:"5px 6px",color:"#2a7a4b",fontWeight:600}}>{Math.round(abCPMAlvo*(t.s/60))}</td></tr>))}</tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const[modo,setModo]=useState("remo");const[mm,setMM]=useState("");const[ss,setSS]=useState("");const[dist,setDist]=useState("");const[alvoTipo,setAlvoTipo]=useState("pct");const[pct,setPct]=useState("5");const[alvoMM,setAlvoMM]=useState("");const[alvoSS,setAlvoSS]=useState("");const[abCal,setAbCal]=useState("");const[abMM,setAbMM]=useState("");const[abSS,setAbSS]=useState("");const[abAlvoTipo,setAbAlvoTipo]=useState("pct");const[abPct,setAbPct]=useState("5");const[abAlvoMM,setAbAlvoMM]=useState("");const[abAlvoSS,setAbAlvoSS]=useState("");
+  const baseSec=toSec(mm,ss);const baseDistM=parseInt(dist)||0;const basePace500=baseSec&&baseDistM?(baseSec/(baseDistM/500)):0;const alvoSec2=alvoTipo==="tempo"?toSec(alvoMM,alvoSS):0;const alvo=basePace500>0?(alvoSec2>0?(alvoSec2/(baseDistM/500)):basePace500*(1-parseInt(pct||0)/100)):0;const abSec=toSec(abMM,abSS);const abTargetCal=parseInt(abCal)||0;const abCPM=abSec&&abTargetCal?(abTargetCal/(abSec/60)):0;const abAlvoSec2=abAlvoTipo==="tempo"?toSec(abAlvoMM,abAlvoSS):0;const abCPMAlvo=abCPM>0?(abAlvoSec2>0?(abTargetCal/(abAlvoSec2/60)):abCPM*(1+parseInt(abPct||0)/100)):0;const abAlvoSecFinal=abCPMAlvo?(abTargetCal/abCPMAlvo)*60:0;
+  return(<div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>{[{id:"remo",l:"Remo"},{id:"ski",l:"SkiErg"},{id:"assault",l:"Assault Bike"}].map(m=>(<Pill key={m.id} label={m.l} active={modo===m.id} onClick={()=>setModo(m.id)}/>))}</div>
+    {(modo==="remo"||modo==="ski")&&(<div><div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Resultado do teste</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}><Field label="Distancia (m)"><input style={INP} value={dist} onChange={e=>setDist(e.target.value)} inputMode="numeric" placeholder="2000"/></Field><Field label="Tempo (mm)"><input style={INP} value={mm} onChange={e=>setMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field><Field label="Tempo (ss)"><input style={INP} value={ss} onChange={e=>setSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field></div><div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",color:"#aaa",marginBottom:8}}>Melhora alvo</div><div style={{display:"flex",gap:6,marginBottom:10}}><button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button><button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button></div>{alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={pct} onChange={e=>setPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}{alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}</div>{basePace500>0&&alvo>0&&(<div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>{modo==="ski"?"SkiErg":"Remo"} — Pace/500m</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}><div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:26,fontWeight:700}}>{fmtMMSS(Math.round(basePace500))}</div></div><div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:26,fontWeight:700,color:"#2a7a4b"}}>{fmtMMSS(Math.round(alvo))}</div></div></div><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}><thead><tr>{["Duracao","Dist Atual","Dist Alvo"].map(h=><th key={h} style={{textAlign:"left",padding:"5px 6px",color:"#888",fontWeight:600,fontSize:11,borderBottom:"1px solid #f0f0ee"}}>{h}</th>)}</tr></thead><tbody>{PACE_DUR.map(t=>{const dA=Math.round(t.sec/basePace500*500);const dAl=Math.round(t.sec/alvo*500);return(<tr key={t.sec} style={{borderBottom:"1px solid #f8f8f6"}}><td style={{padding:"6px 6px",fontWeight:500}}>{t.label}</td><td style={{padding:"6px 6px",color:"#555"}}>{dA}m</td><td style={{padding:"6px 6px",color:"#2a7a4b",fontWeight:600}}>{dAl}m</td></tr>);})}</tbody></table></div>)}</div>)}
+    {modo==="assault"&&(<div><div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Assault Bike</div><div style={{fontSize:12,color:"#888",marginBottom:12}}>Tempo para atingir X calorias</div><Field label="Calorias realizadas"><input style={INP} value={abCal} onChange={e=>setAbCal(e.target.value)} inputMode="numeric" placeholder="50"/></Field><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Field label="Tempo (mm)"><input style={INP} value={abMM} onChange={e=>setAbMM(e.target.value)} inputMode="numeric" placeholder="1"/></Field><Field label="Tempo (ss)"><input style={INP} value={abSS} onChange={e=>setAbSS(e.target.value)} inputMode="numeric" placeholder="45"/></Field></div><div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",color:"#aaa",marginBottom:8}}>Melhora alvo</div><div style={{display:"flex",gap:6,marginBottom:10}}><button onClick={()=>setAbAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:abAlvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:abAlvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button><button onClick={()=>setAbAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:abAlvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:abAlvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button></div>{abAlvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={abPct} onChange={e=>setAbPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}{abAlvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={abAlvoMM} onChange={e=>setAbAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span style={{color:"#888"}}>:</span><input style={{...INP,width:70,textAlign:"center"}} value={abAlvoSS} onChange={e=>setAbAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}</div>{abSec>0&&abCPM>0&&(<div style={CARD}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}><div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:24,fontWeight:700}}>{abCPM.toFixed(1)}</div><div style={{fontSize:11,color:"#888"}}>{abTargetCal}cal em {fmtMMSS(abSec)}</div></div><div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:24,fontWeight:700,color:"#2a7a4b"}}>{abCPMAlvo.toFixed(1)}</div><div style={{fontSize:11,color:"#2a7a4b"}}>{abTargetCal}cal em {fmtMMSS(Math.round(abAlvoSecFinal))}</div></div></div><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}><thead><tr>{["Duracao","Atual","Alvo"].map(h=><th key={h} style={{textAlign:"left",padding:"5px 6px",color:"#888",fontWeight:600,fontSize:11,borderBottom:"1px solid #f0f0ee"}}>{h}</th>)}</tr></thead><tbody>{[{l:"30s",s:30},{l:"45s",s:45},{l:"1 min",s:60},{l:"2 min",s:120},{l:"4 min",s:240},{l:"6 min",s:360},{l:"8 min",s:480},{l:"10 min",s:600},{l:"12 min",s:720}].map(t=>(<tr key={t.s} style={{borderBottom:"1px solid #f8f8f6"}}><td style={{padding:"5px 6px",fontWeight:500}}>{t.l}</td><td style={{padding:"5px 6px",color:"#555"}}>{Math.round(abCPM*(t.s/60))}</td><td style={{padding:"5px 6px",color:"#2a7a4b",fontWeight:600}}>{Math.round(abCPMAlvo*(t.s/60))}</td></tr>))}</tbody></table></div>)}</div>)}
+  </div>);
 }
 
-// ═══ APP ═════════════════════════════════════════════════════════
-const TABS=[
-  {id:"treinos",label:"Treinos",icon:"📋"},
-  {id:"prs",label:"PRs",icon:"🏆"},
-  {id:"progresso",label:"Progresso",icon:"📈"},
-  {id:"hyrox",label:"Hyrox",icon:"⚡"},
-  {id:"pace",label:"Pace",icon:"🎯"},
-];
+const TABS=[{id:"treinos",label:"Treinos",icon:"📋"},{id:"prs",label:"PRs",icon:"🏆"},{id:"progresso",label:"Progresso",icon:"📈"},{id:"hyrox",label:"Hyrox",icon:"⚡"},{id:"pace",label:"Pace",icon:"🎯"}];
 
 function App(){
-  const [db,update,loaded]=useDB();
-  const [modo,entrar,sair]=useModo();
-  const [tab,setTab]=useState("treinos");
-  const isCoach=modo==="coach";
+  const[db,update,loaded]=useDB();const[modo,entrar,sair]=useModo();const[tab,setTab]=useState("treinos");const isCoach=modo==="coach";
   if(!loaded)return(<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontSize:16,color:"#888"}}>Carregando...</div>);
-  return(
-    <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
-      <div style={{position:"sticky",top:0,zIndex:100,background:"#fff",borderBottom:"1px solid #e8e8e5",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{fontSize:18,fontWeight:800,letterSpacing:"-0.5px"}}>Coach RX</div>
-        <BotaoModo modo={modo} entrar={entrar} sair={sair}/>
-      </div>
-      <div style={{flex:1,padding:"16px 14px 100px",overflowY:"auto"}}>
-        {tab==="treinos"&&<TreinosTab db={db} update={update} isCoach={isCoach}/>}
-        {tab==="prs"&&<PRsTab db={db} update={update}/>}
-        {tab==="progresso"&&<ProgressoTab db={db}/>}
-        {tab==="hyrox"&&<HyroxTab/>}
-        {tab==="pace"&&<PaceTab/>}
-      </div>
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"#fff",borderTop:"1px solid #e8e8e5",display:"flex",zIndex:100}}>
-        {TABS.map(t=>(
-          <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px 14px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-            <span style={{fontSize:18}}>{t.icon}</span>
-            <span style={{fontSize:10,color:tab===t.id?"#1a1a1a":"#bbb",fontWeight:tab===t.id?700:400}}>{t.label}</span>
-            {tab===t.id&&<div style={{width:20,height:2,background:"#1a1a1a",borderRadius:1,marginTop:1}}/>}
-          </button>
-        ))}
-      </div>
+  return(<div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+    <div style={{position:"sticky",top:0,zIndex:100,background:"#fff",borderBottom:"1px solid #e8e8e5",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{fontSize:18,fontWeight:800,letterSpacing:"-0.5px"}}>Coach RX</div><BotaoModo modo={modo} entrar={entrar} sair={sair}/></div>
+    <div style={{flex:1,padding:"16px 14px 100px"}}>
+      {tab==="treinos"&&<TreinosTab db={db} update={update} isCoach={isCoach}/>}
+      {tab==="prs"&&<PRsTab db={db} update={update}/>}
+      {tab==="progresso"&&<ProgressoTab db={db}/>}
+      {tab==="hyrox"&&<HyroxTab/>}
+      {tab==="pace"&&<PaceTab/>}
     </div>
-  );
+    <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"#fff",borderTop:"1px solid #e8e8e5",display:"flex",zIndex:100}}>
+      {TABS.map(t=>(<button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px 14px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:18}}>{t.icon}</span><span style={{fontSize:10,color:tab===t.id?"#1a1a1a":"#bbb",fontWeight:tab===t.id?700:400}}>{t.label}</span>{tab===t.id&&<div style={{width:20,height:2,background:"#1a1a1a",borderRadius:1,marginTop:1}}/>}</button>))}
+    </div>
+  </div>);
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
