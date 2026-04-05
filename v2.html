@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Coach RX</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#fff;min-height:100vh;}
+input,textarea,select,button{font-family:inherit;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.fadein{animation:fadeIn .35s ease both;}
+
+.login-bg{min-height:100vh;background:linear-gradient(160deg,#0a0a0a 0%,#0f1a10 60%,#0a0a0a 100%);display:flex;align-items:center;justify-content:center;padding:24px;}
+.login-card{width:100%;max-width:380px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:40px 32px;backdrop-filter:blur(20px);}
+.login-logo{font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;color:#fff;}
+.login-logo span{color:#00e676;}
+.login-sub{font-size:13px;color:#555;margin-bottom:32px;}
+.login-inp{width:100%;padding:14px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:15px;outline:none;transition:border .2s;margin-bottom:10px;display:block;}
+.login-inp:focus{border-color:rgba(0,230,118,.5);}
+.login-inp::placeholder{color:#3a3a3a;}
+.login-btn{width:100%;padding:15px;border-radius:12px;border:none;background:#00e676;color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;margin-bottom:0;}
+.login-btn:hover{opacity:.9;}
+.login-btn:disabled{opacity:.5;cursor:default;}
+.login-divider{display:flex;align-items:center;gap:12px;color:#2a2a2a;font-size:12px;margin:14px 0;}
+.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:#1e1e1e;}
+.login-btn-g{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#ccc;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;}
+.login-btn-g:hover{background:rgba(255,255,255,.08);}
+.login-err{color:#ff5252;font-size:13px;text-align:center;margin-top:12px;}
+
+.dash-bg{min-height:100vh;background:#0a0a0a;padding-bottom:40px;}
+.dash-header{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.dash-logo{font-size:20px;font-weight:900;letter-spacing:-.5px;color:#fff;}
+.dash-logo span{color:#00e676;}
+.dash-row{display:flex;align-items:center;gap:10px;}
+.dash-av{width:34px;height:34px;border-radius:50%;object-fit:cover;}
+.dash-av-i{width:34px;height:34px;border-radius:50%;background:#111;border:1.5px solid #1e1e1e;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#00e676;}
+.dash-out{background:none;border:none;color:#333;font-size:12px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:color .2s;}
+.dash-out:hover{color:#aaa;}
+.dash-hi{padding:28px 20px 10px;}
+.dash-hi h2{font-size:23px;font-weight:800;letter-spacing:-.5px;color:#fff;}
+.dash-hi p{font-size:13px;color:#444;margin-top:5px;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 20px;}
+.mcard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:20px 18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.mcard:active{transform:scale(.98);}
+.mcard.soon{opacity:.45;cursor:default;}
+.mcard.soon:active{transform:none;}
+.mcard-badge{position:absolute;top:10px;right:10px;font-size:9px;font-weight:700;background:#111;color:#333;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.05em;}
+.mcard-badge.on{background:rgba(0,230,118,.12);color:#00e676;}
+.mcard-icon{font-size:30px;margin-bottom:10px;}
+.mcard-name{font-size:13px;font-weight:700;color:#fff;letter-spacing:-.1px;}
+.mcard-desc{font-size:11px;color:#444;margin-top:3px;line-height:1.4;}
+
+.app-wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#f5f5f3;color:#1a1a1a;}
+.app-hdr{position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e8e8e5;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.app-back{background:none;border:none;font-size:26px;cursor:pointer;color:#1a1a1a;line-height:1;padding:0 2px;}
+.app-title{font-size:17px;font-weight:800;letter-spacing:-.3px;flex:1;}
+.app-body{flex:1;padding:16px 14px 100px;}
+.app-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid #e8e8e5;display:flex;z-index:100;}
+
+.vcardx{background:#fff;border:1px solid #e8e8e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.vthumb{width:64px;height:48px;border-radius:10px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;}
+.vthumb img{width:100%;height:100%;object-fit:cover;}
+.vplay{width:36px;height:36px;border-radius:50%;background:#1a1a1a;border:none;cursor:pointer;color:#fff;font-size:12px;flex-shrink:0;}
+
+.loading{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;background:#0a0a0a;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// =============================================
+// FIREBASE CONFIG — cole aqui suas credenciais
+// =============================================
+const firebaseConfig = {
+  apiKey: "AIzaSyAuQoR3v-mEN_1bWxeRwsjArBPycFtOmkE",
+  authDomain: "teste-2-57390.firebaseapp.com",
+  projectId: "teste-2-57390",
+  storageBucket: "teste-2-57390.firebasestorage.app",
+  messagingSenderId: "920222124327",
+  appId: "1:920222124327:web:8fd69920c12c881fb88102"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+</script>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef}=React;
+const uid=()=>"id_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+const fmtMMSS=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,"0")}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
+const toSec=(m,s)=>parseInt(m||0)*60+parseInt(s||0);
+const round25=v=>Math.round(v/2.5)*2.5;
+
+const INP={width:"100%",fontSize:15,padding:"10px 12px",border:"1px solid #e0e0dc",borderRadius:10,background:"#fff",color:"#1a1a1a",outline:"none",WebkitAppearance:"none",boxSizing:"border-box"};
+const BTNCANCEL={flex:1,padding:13,fontSize:15,borderRadius:10,border:"1px solid #e0e0dc",background:"#fff",color:"#1a1a1a",cursor:"pointer",fontWeight:500};
+const BTNOK={flex:1,padding:13,fontSize:15,borderRadius:10,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer",fontWeight:600};
+const CARD={background:"#fff",border:"1px solid #e8e8e5",borderRadius:14,padding:"14px 16px",marginBottom:12};
+
+// Modalidades
+const MODALS=[
+  {id:"hyrox",nome:"HYROX",icon:"⚡",desc:"Competição HYROX",ativo:true},
+  {id:"corrida",nome:"Corrida",icon:"🏃",desc:"Road & Trail Running",ativo:true},
+  {id:"crossfit",nome:"CrossFit",icon:"🏋️",desc:"Treino funcional",ativo:false},
+  {id:"ultramaratona",nome:"Ultramaratona",icon:"🌄",desc:"Ultra distância",ativo:false},
+  {id:"triatlo",nome:"Triathlon",icon:"🚴",desc:"Swim Bike Run",ativo:false},
+  {id:"ultratriatlo",nome:"Ultratriatlo",icon:"🌊",desc:"Ironman & beyond",ativo:false},
+  {id:"curso_op",nome:"Curso Operativo",icon:"🎖️",desc:"Preparação militar",ativo:false},
+];
+
+// =============================================
+// LOGIN
+// =============================================
+function LoginScreen(){
+  const[email,setEmail]=useState("");
+  const[pass,setPass]=useState("");
+  const[err,setErr]=useState("");
+  const[loading,setLoading]=useState(false);
+
+  const doLogin=async()=>{
+    if(!email.trim()||!pass){setErr("Preencha email e senha");return;}
+    setLoading(true);setErr("");
+    try{await fbAuth.signInWithEmailAndPassword(email.trim(),pass);}
+    catch(e){
+      if(e.code==="auth/user-not-found"||e.code==="auth/wrong-password"||e.code==="auth/invalid-credential")setErr("Email ou senha incorretos");
+      else if(e.code==="auth/invalid-api-key"||e.code==="auth/api-key-not-valid")setErr("⚠️ Configure o Firebase no código antes de usar");
+      else setErr("Erro: "+e.message);
+    }
+    setLoading(false);
+  };
+
+  const doGoogle=async()=>{
+    setLoading(true);setErr("");
+    try{await fbAuth.signInWithPopup(googleProvider);}
+    catch(e){
+      if(e.code==="auth/invalid-api-key"||e.code==="auth/api-key-not-valid")setErr("⚠️ Configure o Firebase no código");
+      else setErr("Erro ao entrar com Google");
+    }
+    setLoading(false);
+  };
+
+  return(
+    <div className="login-bg fadein">
+      <div className="login-card">
+        <div className="login-logo">Coach<span>RX</span></div>
+        <div className="login-sub">Plataforma de preparação de atletas</div>
+        <input className="login-inp" type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()}/>
+        <input className="login-inp" type="password" placeholder="Senha" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()}/>
+        <button className="login-btn" onClick={doLogin} disabled={loading}>{loading?"Entrando...":"Entrar"}</button>
+        {err&&<div className="login-err">{err}</div>}
+        <div className="login-divider">ou</div>
+        <button className="login-btn-g" onClick={doGoogle} disabled={loading}>
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+          Entrar com Google
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================
+// DASHBOARD
+// =============================================
+function Dashboard({user,onSelect,onSignOut}){
+  const nome=user.displayName||user.email?.split("@")[0]||"Atleta";
+  const h=new Date().getHours();
+  const saud=h<12?"Bom dia":h<18?"Boa tarde":"Boa noite";
+  return(
+    <div className="dash-bg fadein">
+      <div className="dash-header">
+        <div className="dash-logo">Coach<span>RX</span></div>
+        <div className="dash-row">
+          {user.photoURL?<img src={user.photoURL} className="dash-av" alt=""/>:<div className="dash-av-i">{nome[0].toUpperCase()}</div>}
+          <button className="dash-out" onClick={onSignOut}>Sair</button>
+        </div>
+      </div>
+      <div className="dash-hi">
+        <h2>{saud}, {nome.split(" ")[0]} 👋</h2>
+        <p>Selecione sua modalidade de treino</p>
+      </div>
+      <div className="dash-grid">
+        {MODALS.map((m,i)=>(
+          <div key={m.id} className={`mcard fadein ${m.ativo?"":"soon"}`}
+            style={{animationDelay:`${i*0.04}s`}}
+            onClick={()=>m.ativo&&onSelect(m.id)}>
+            <div className={`mcard-badge ${m.ativo?"on":""}`}>{m.ativo?"Ativo":"Em breve"}</div>
+            <div className="mcard-icon">{m.icon}</div>
+            <div className="mcard-name">{m.nome}</div>
+            <div className="mcard-desc">{m.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =============================================
+// DB (localStorage, preservando dados existentes)
+// =============================================
+const SEED={
+  alunos:[
+    {id:"camila01",nome:"Camila",objetivo:"Podio"},
+    {id:"kenny01",nome:"Kenny",objetivo:""},
+    {id:"thiago01",nome:"Thiago",objetivo:""},
+    {id:"darfine01",nome:"Darfine",objetivo:""},
+  ],
+  semanas:{
+    camila01:[{id:"sem01",nome:"Semana 1",obs:"Testes de base"},{id:"sem02",nome:"Semana 2",obs:"Volume especifico"}],
+    kenny01:[{id:"sem02k",nome:"Semana 2",obs:"Volume especifico"}],
+    thiago01:[{id:"sem02t",nome:"Semana 2",obs:"Volume especifico"}],
+    darfine01:[{id:"sem02d",nome:"Semana 2",obs:"Volume especifico"}],
+  },
+  dias:{
+    sem01:[{id:"d01",nome:"Segunda",foco:"Remo + Workout + Forca"},{id:"d02",nome:"Terca",foco:"Bike — Teste + Pace"},{id:"d03",nome:"Quarta",foco:"Ski — Teste 2km + Hyrox"},{id:"d04",nome:"Quinta",foco:"Bike — Intervalos"},{id:"d05",nome:"Sexta",foco:"Remo Volume + Potencia"},{id:"d06",nome:"Sabado",foco:"HYROX Workout"}],
+    sem02:[{id:"w2d01",nome:"Segunda",foco:"Corrida + Simulado + Core"},{id:"w2d02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},{id:"w2d03",nome:"Quarta",foco:"SkiErg Volume + Circuito Corporal"},{id:"w2d04",nome:"Quinta",foco:"Corrida Kenny + Forca + Remo SPM"},{id:"w2d05",nome:"Sexta",foco:"EMOM 32 min HYROX"},{id:"w2d06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"}],
+    sem02k:[{id:"kd01",nome:"Segunda",foco:"Corrida + Simulado + Core"},{id:"kd02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},{id:"kd03",nome:"Quarta",foco:"SkiErg Volume + Circuito Corporal"},{id:"kd04",nome:"Quinta",foco:"Corrida Kenny + Forca + Remo SPM"},{id:"kd05",nome:"Sexta",foco:"EMOM 32 min HYROX"},{id:"kd06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"}],
+    sem02t:[{id:"td01",nome:"Segunda",foco:"Corrida + Simulado + Core"},{id:"td02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},{id:"td03",nome:"Quarta",foco:"SkiErg Volume + Circuito Corporal"},{id:"td04",nome:"Quinta",foco:"Corrida Kenny + Forca + Remo SPM"},{id:"td05",nome:"Sexta",foco:"EMOM 32 min HYROX"},{id:"td06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"}],
+    sem02d:[{id:"dd01",nome:"Segunda",foco:"Corrida + Simulado + Core"},{id:"dd02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},{id:"dd03",nome:"Quarta",foco:"SkiErg Volume + Circuito Corporal"},{id:"dd04",nome:"Quinta",foco:"Corrida Kenny + Forca + Remo SPM"},{id:"dd05",nome:"Sexta",foco:"EMOM 32 min HYROX"},{id:"dd06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"}],
+  },
+  sessoes:{},done:{},prs:{},
+};
+
+function useDB(){
+  const[data,setData]=useState(null);
+  useEffect(()=>{
+    try{
+      const s=localStorage.getItem("coachRxDB");
+      const p=s?JSON.parse(s):null;
+      const m={...SEED,...(p||{})};
+      m.sessoes=m.sessoes||{};m.done=m.done||{};m.prs=m.prs||{};
+      setData(m);
+    }catch{setData({...SEED,sessoes:{},done:{},prs:{}});}
+  },[]);
+  const update=useCallback(fn=>{
+    setData(prev=>{
+      const next=JSON.parse(JSON.stringify(prev));fn(next);
+      try{localStorage.setItem("coachRxDB",JSON.stringify(next));}catch{}
+      return next;
+    });
+  },[]);
+  return[data,update,!!data];
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function Pill({label,active,onClick}){
+  return(<button onClick={onClick} style={{padding:"7px 14px",fontSize:13,borderRadius:99,border:"none",background:active?"#1a1a1a":"#f0f0ee",color:active?"#fff":"#888",cursor:"pointer",fontWeight:active?700:400,transition:"all .15s",flexShrink:0}}>{label}</button>);
+}
+function Field({label,children}){
+  return(<div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:600,color:"#888",marginBottom:5,textTransform:"uppercase",letterSpacing:".06em"}}>{label}</div>{children}</div>);
+}
+function Sheet({open,onClose,title,children}){
+  if(!open)return null;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:300,display:"flex",flexDirection:"column",justifyContent:"flex-end"}} onClick={onClose}>
+      <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)"}}/>
+      <div style={{position:"relative",background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 16px 44px",maxHeight:"88vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+        <div style={{width:36,height:4,background:"#e0e0dc",borderRadius:2,margin:"0 auto 16px"}}/>
+        {title&&<div style={{fontSize:17,fontWeight:700,marginBottom:16}}>{title}</div>}
+        {children}
+      </div>
+    </div>
+  );
+}
+function useModo(){
+  const[modo,setModo]=useState("atleta");
+  const entrar=()=>{const p=prompt("Senha coach:");if(p==="coach123")setModo("coach");};
+  return[modo,entrar,()=>setModo("atleta")];
+}
+function BotaoModo({modo,entrar,sair}){
+  if(modo==="coach")return(<button onClick={sair} style={{padding:"6px 14px",fontSize:12,borderRadius:99,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer",fontWeight:600}}>Coach ✓</button>);
+  return(<button onClick={entrar} style={{padding:"6px 14px",fontSize:12,borderRadius:99,border:"1px solid #e0e0dc",background:"transparent",color:"#999",cursor:"pointer"}}>Coach</button>);
+}
+
+// =============================================
+// TREINOS TAB
+// =============================================
+function TreinosTab({db,update,isCoach}){
+  const[selAluno,setSelAluno]=useState(db.alunos[0]?.id);
+  const[selSem,setSelSem]=useState(null);
+  const[selDia,setSelDia]=useState(null);
+  const[addSem,setAddSem]=useState(false);const[addDia,setAddDia]=useState(false);const[addSess,setAddSess]=useState(false);
+  const[semNome,setSemNome]=useState("");const[semObs,setSemObs]=useState("");
+  const[diaNome,setDiaNome]=useState("");const[diaFoco,setDiaFoco]=useState("");
+  const[sessNome,setSessNome]=useState("");const[sessTipo,setSessTipo]=useState("cardio");const[sessDesc,setSessDesc]=useState("");
+  const sems=db.semanas[selAluno]||[];
+  const dias=selSem?db.dias[selSem]||[]:[];
+  const sessoes=selDia?db.sessoes[selDia]||[]:[];
+  const createSem=()=>{if(!semNome)return;const id=uid();update(d=>{if(!d.semanas[selAluno])d.semanas[selAluno]=[];d.semanas[selAluno].push({id,nome:semNome,obs:semObs});if(!d.dias[id])d.dias[id]=[];});setAddSem(false);setSemNome("");setSemObs("");};
+  const createDia=()=>{if(!diaNome)return;const id=uid();update(d=>{if(!d.dias[selSem])d.dias[selSem]=[];d.dias[selSem].push({id,nome:diaNome,foco:diaFoco});if(!d.sessoes[id])d.sessoes[id]=[];});setAddDia(false);setDiaNome("");setDiaFoco("");};
+  const createSess=()=>{if(!sessNome)return;const id=uid();update(d=>{if(!d.sessoes[selDia])d.sessoes[selDia]=[];d.sessoes[selDia].push({id,nome:sessNome,tipo:sessTipo,desc:sessDesc});});setAddSess(false);setSessNome("");setSessDesc("");};
+  const toggleDone=id=>{const key=`ss_done_${id}`;update(d=>{d.done[key]=!d.done[key];});};
+  const deleteSess=id=>{update(d=>{d.sessoes[selDia]=d.sessoes[selDia].filter(s=>s.id!==id);});};
+  if(!selSem)return(<div><div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{db.alunos.map(a=><Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>{setSelAluno(a.id);setSelSem(null);setSelDia(null);}}/>)}</div>{sems.map(s=>{let t=0,d2=0;(db.dias[s.id]||[]).forEach(d=>{const ss=db.sessoes[d.id]||[];t+=ss.length;d2+=ss.filter(ss2=>db.done[`ss_done_${ss2.id}`]).length;});return(<div key={s.id} style={{...CARD,cursor:"pointer"}} onClick={()=>setSelSem(s.id)}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><div style={{fontSize:15,fontWeight:700}}>{s.nome}</div>{s.obs&&<div style={{fontSize:12,color:"#888",marginTop:2}}>{s.obs}</div>}</div><div style={{textAlign:"right",fontSize:12,color:"#aaa"}}>{d2}/{t} ✓</div></div>{t>0&&<div style={{marginTop:10,height:4,background:"#f0f0ee",borderRadius:99}}><div style={{height:"100%",width:`${Math.round(d2/t*100)}%`,background:"#2a7a4b",borderRadius:99}}/></div>}</div>);})}{isCoach&&<button onClick={()=>setAddSem(true)} style={{width:"100%",padding:13,borderRadius:12,border:"2px dashed #e0e0dc",background:"transparent",color:"#888",fontSize:14,cursor:"pointer",fontWeight:500}}>+ Nova semana</button>}<Sheet open={addSem} onClose={()=>setAddSem(false)} title="Nova Semana"><Field label="Nome"><input style={INP} value={semNome} onChange={e=>setSemNome(e.target.value)} placeholder="Semana 3"/></Field><Field label="Observacao"><input style={INP} value={semObs} onChange={e=>setSemObs(e.target.value)} placeholder="Foco desta semana"/></Field><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddSem(false)}>Cancelar</button><button style={BTNOK} onClick={createSem}>Criar</button></div></Sheet></div>);
+  if(!selDia)return(<div><button onClick={()=>setSelSem(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#888",fontSize:14,cursor:"pointer",marginBottom:16,padding:0}}>← Semanas</button><div style={{fontSize:17,fontWeight:700,marginBottom:14}}>{sems.find(s=>s.id===selSem)?.nome}</div>{dias.map(d=>{const ss=db.sessoes[d.id]||[];const done=ss.filter(s=>db.done[`ss_done_${s.id}`]).length;return(<div key={d.id} style={{...CARD,cursor:"pointer"}} onClick={()=>setSelDia(d.id)}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{d.foco}</div></div><div style={{fontSize:12,color:"#aaa"}}>{done}/{ss.length}</div></div></div>);})}{isCoach&&<button onClick={()=>setAddDia(true)} style={{width:"100%",padding:13,borderRadius:12,border:"2px dashed #e0e0dc",background:"transparent",color:"#888",fontSize:14,cursor:"pointer",fontWeight:500}}>+ Novo dia</button>}<Sheet open={addDia} onClose={()=>setAddDia(false)} title="Novo Dia"><Field label="Nome"><input style={INP} value={diaNome} onChange={e=>setDiaNome(e.target.value)} placeholder="Segunda"/></Field><Field label="Foco"><input style={INP} value={diaFoco} onChange={e=>setDiaFoco(e.target.value)} placeholder="Remo + Forca"/></Field><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddDia(false)}>Cancelar</button><button style={BTNOK} onClick={createDia}>Criar</button></div></Sheet></div>);
+  const dia=dias.find(d=>d.id===selDia);
+  return(<div><button onClick={()=>setSelDia(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#888",fontSize:14,cursor:"pointer",marginBottom:16,padding:0}}>← {dia?.nome}</button><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{dia?.foco}</div><div style={{fontSize:12,color:"#888",marginBottom:16}}>{sessoes.length} sessao(oes)</div>{sessoes.map(s=>{const done=db.done[`ss_done_${s.id}`];return(<div key={s.id} style={{...CARD,opacity:done?.9:1}}><div style={{display:"flex",gap:12,alignItems:"flex-start"}}><button onClick={()=>toggleDone(s.id)} style={{width:24,height:24,borderRadius:6,border:`2px solid ${done?"#2a7a4b":"#d0d0cc"}`,background:done?"#2a7a4b":"transparent",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>{done&&<span style={{color:"#fff",fontSize:13}}>✓</span>}</button><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:done?"#999":"#1a1a1a",textDecoration:done?"line-through":"none"}}>{s.nome}</div>{s.tipo&&<span style={{fontSize:11,background:"#f0f0ee",borderRadius:6,padding:"2px 7px",color:"#666",display:"inline-block",marginTop:3}}>{s.tipo}</span>}{s.desc&&<div style={{fontSize:13,color:"#666",marginTop:6,lineHeight:1.5}}>{s.desc}</div>}</div>{isCoach&&<button onClick={()=>deleteSess(s.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18,padding:"0 4px"}}>×</button>}</div></div>);})}{isCoach&&<button onClick={()=>setAddSess(true)} style={{width:"100%",padding:13,borderRadius:12,border:"2px dashed #e0e0dc",background:"transparent",color:"#888",fontSize:14,cursor:"pointer",fontWeight:500}}>+ Nova sessao</button>}<Sheet open={addSess} onClose={()=>setAddSess(false)} title="Nova Sessao"><Field label="Nome"><input style={INP} value={sessNome} onChange={e=>setSessNome(e.target.value)} placeholder="5x400m — Pace 4:30"/></Field><Field label="Tipo"><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["cardio","forca","tecnica","hyrox","mobilidade"].map(t=><Pill key={t} label={t} active={sessTipo===t} onClick={()=>setSessTipo(t)}/>)}</div></Field><Field label="Descricao"><textarea style={{...INP,minHeight:80,resize:"vertical"}} value={sessDesc} onChange={e=>setSessDesc(e.target.value)} placeholder="Detalhes do treino..."/></Field><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setAddSess(false)}>Cancelar</button><button style={BTNOK} onClick={createSess}>Criar</button></div></Sheet></div>);
+}
+
+// =============================================
+// PRs HYROX
+// =============================================
+const PR_DEFS={back_squat:{nome:"Back Squat 1RM",unidade:"kg",icon:"🏋️"},deadlift:{nome:"Deadlift 1RM",unidade:"kg",icon:"⬆️"},front_squat:{nome:"Front Squat 1RM",unidade:"kg",icon:"🏋️"},press:{nome:"Shoulder Press 1RM",unidade:"kg",icon:"💪"},remo:{nome:"Remo",unidade:"seg",icon:"🚣"},ski:{nome:"SkiErg",unidade:"seg",icon:"⛷"},assault:{nome:"Assault Bike",unidade:"seg",icon:"🚴"}};
+
+function PRsTab({db,update}){
+  const[selAluno,setSelAluno]=useState(db.alunos[0]?.id);const[editKey,setEditKey]=useState(null);const[vKg,setVKg]=useState("");const[vMM,setVMM]=useState("");const[vSS,setVSS]=useState("");const[vDist,setVDist]=useState("");const[vCal,setVCal]=useState("");const[alvoTipo,setAlvoTipo]=useState("pct");const[alvoPct,setAlvoPct]=useState("5");const[alvoMM,setAlvoMM]=useState("");const[alvoSS,setAlvoSS]=useState("");const[vProt,setVProt]=useState("");
+  const prs=db.prs?.[selAluno]||{};const def=editKey?PR_DEFS[editKey]:null;const isTimePR=def?.unidade==="seg";const isA=editKey==="assault";
+  const openEdit=(key,pr)=>{setEditKey(key);if(PR_DEFS[key].unidade==="kg"){setVKg(pr?.valor?String(pr.valor):"");}else{setVMM(pr?.valor?String(Math.floor(pr.valor/60)):"");setVSS(pr?.valor?String(pr.valor%60):"");setVDist(pr?.dist?String(pr.dist):"");setVCal(pr?.cal?String(pr.cal):"");setAlvoTipo(pr?.alvoTipo||"pct");setAlvoPct(String(pr?.alvoPct||5));setAlvoMM(pr?.alvoTempo?String(Math.floor(pr.alvoTempo/60)):"");setAlvoSS(pr?.alvoTempo?String(pr.alvoTempo%60):"");setVProt(pr?.protocolo||"");}};
+  const closeEdit=()=>setEditKey(null);
+  const savePR=()=>{if(def.unidade==="kg"){const val=parseFloat(vKg);if(!val)return;update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:val,unidade:"kg",nome:def.nome};});}else{const sec=toSec(vMM,vSS);if(!sec)return;const ia=editKey==="assault";update(d=>{if(!d.prs[selAluno])d.prs[selAluno]={};d.prs[selAluno][editKey]={valor:sec,unidade:"seg",nome:def.nome,dist:!ia?(parseInt(vDist)||undefined):undefined,cal:ia?(parseInt(vCal)||undefined):undefined,alvoTipo,alvoPct:alvoTipo==="pct"?parseInt(alvoPct)||5:undefined,alvoTempo:alvoTipo==="tempo"?(toSec(alvoMM,alvoSS)||undefined):undefined,protocolo:ia?(vProt.trim()||undefined):undefined};});}closeEdit();};
+  const pSec=toSec(vMM,vSS);
+  return(<div>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>{db.alunos.map(a=><Pill key={a.id} label={a.nome} active={selAluno===a.id} onClick={()=>setSelAluno(a.id)}/>)}</div>
+    <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10}}>Cargas 1RM</div>
+    {["back_squat","deadlift","front_squat","press"].map(key=>{const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;return(<div key={key} style={{...CARD,padding:"12px 14px",display:"flex",alignItems:"flex-start",gap:12}}><div style={{fontSize:26,width:36,textAlign:"center",paddingTop:2}}>{d.icon}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?(<><div style={{fontSize:20,fontWeight:700,color:"#2a7a4b",marginTop:2}}>{val} kg</div><div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><span key={p} style={{fontSize:11,background:"#f0f0ee",borderRadius:6,padding:"2px 7px",color:"#555"}}>{p}%={round25(val*p/100)}kg</span>)}</div></>):<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div><button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button></div>);})}
+    <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:10,marginTop:4}}>Maquinas</div>
+    {["remo","ski","assault"].map(key=>{const d=PR_DEFS[key];const pr=prs[key];const val=pr?.valor||0;const ia=key==="assault";const pace500=val&&!ia&&pr?.dist?Math.round(val/(pr.dist/500)):0;const calMin=val&&ia&&pr?.cal?(pr.cal/(val/60)):0;const alvoSec=pr?.alvoTempo||0;const alvoPctV=pr?.alvoPct||5;const p5Alvo=pace500>0?(alvoSec>0?Math.round(alvoSec/(pr.dist/500)):Math.round(pace500*(1-alvoPctV/100))):0;const cpmAlvo=calMin>0?(alvoSec>0?(pr.cal/(alvoSec/60)):calMin*(1+alvoPctV/100)):0;const abAlvoSec=cpmAlvo&&pr?.cal?(pr.cal/cpmAlvo)*60:0;const protocolo=(pr?.protocolo||"").split(",").map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>0);return(<div key={key} style={{...CARD,padding:"12px 14px"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:val>0?12:0}}><div style={{fontSize:26,width:36,textAlign:"center"}}>{d.icon}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{d.nome}</div>{val>0?<div style={{fontSize:18,fontWeight:700,color:"#2a7a4b",marginTop:1}}>{ia?`${pr?.cal||"?"}cal em `:""}{fmtMMSS(val)}{!ia&&pr?.dist?<span style={{fontSize:12,fontWeight:400,color:"#888",marginLeft:6}}>({pr.dist}m)</span>:null}</div>:<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao cadastrado</div>}</div><button onClick={()=>openEdit(key,pr)} style={{padding:"7px 14px",fontSize:13,borderRadius:10,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",flexShrink:0}}>{val>0?"Editar":"+ PR"}</button></div>{val>0&&!ia&&pace500>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>{[{l:"Pace/500m",v:fmtMMSS(pace500),g:false},{l:"Alvo",v:fmtMMSS(p5Alvo),g:true},{l:"Z2 +10%",v:fmtMMSS(Math.round(pace500*1.1)),g:false}].map(x=><div key={x.l} style={{background:x.g?"rgba(42,122,75,.1)":"#f5f5f3",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:10,color:x.g?"#2a7a4b":"#888"}}>{x.l}</div><div style={{fontSize:14,fontWeight:700,color:x.g?"#2a7a4b":"#1a1a1a"}}>{x.v}</div></div>)}</div>}{val>0&&ia&&calMin>0&&<div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}><div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:22,fontWeight:700}}>{calMin.toFixed(1)}</div><div style={{fontSize:11,color:"#888"}}>{pr.cal}cal em {fmtMMSS(val)}</div></div><div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:22,fontWeight:700,color:"#2a7a4b"}}>{cpmAlvo.toFixed(1)}</div><div style={{fontSize:11,color:"#2a7a4b"}}>{pr.cal}cal em {fmtMMSS(Math.round(abAlvoSec))}</div></div></div></div>}</div>);})}
+    <Sheet open={!!editKey&&!isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}><Field label="Carga 1RM (kg)"><input style={INP} value={vKg} onChange={e=>setVKg(e.target.value)} inputMode="decimal" placeholder="Ex: 90"/></Field>{vKg&&!isNaN(parseFloat(vKg))&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[40,50,55,60,65,70,75,80,85,90].map(p=><div key={p} style={{display:"flex",justifyContent:"space-between",fontSize:13,padding:"3px 6px"}}><span style={{color:"#888"}}>{p}%</span><span style={{fontWeight:700}}>{round25(parseFloat(vKg)*p/100)} kg</span></div>)}</div>}<div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div></Sheet>
+    <Sheet open={!!editKey&&isTimePR} onClose={closeEdit} title={`PR — ${def?.nome||""}`}>{!isA&&<Field label="Distancia (m)"><input style={INP} value={vDist} onChange={e=>setVDist(e.target.value)} inputMode="numeric" placeholder="2000"/></Field>}{isA&&<Field label="Calorias realizadas"><input style={INP} value={vCal} onChange={e=>setVCal(e.target.value)} inputMode="numeric" placeholder="50"/></Field>}<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Field label="Tempo (mm)"><input style={INP} value={vMM} onChange={e=>setVMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field><Field label="Tempo (ss)"><input style={INP} value={vSS} onChange={e=>setVSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field></div><div style={{marginBottom:14}}><div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",color:"#aaa",marginBottom:8}}>Melhora alvo</div><div style={{display:"flex",gap:6,marginBottom:10}}><button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button><button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button></div>{alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={alvoPct} onChange={e=>setAlvoPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}{alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/><span style={{fontSize:13,color:"#888"}}>tempo alvo</span></div>}</div>{isA&&<Field label="Protocolo (cal/round, separar por virgula)"><input style={INP} value={vProt} onChange={e=>setVProt(e.target.value)} placeholder="12,11,10,9,8,7,6,5"/></Field>}{pSec>0&&<div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",marginBottom:14,fontSize:13}}><strong>{fmtMMSS(pSec)}</strong></div>}<div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={closeEdit}>Cancelar</button><button style={BTNOK} onClick={savePR}>Salvar</button></div></Sheet>
+  </div>);
+}
+
+// =============================================
+// PRs CORRIDA
+// =============================================
+const PR_CORRIDA={km1:{nome:"1 km",icon:"⚡",dist:1000},km3:{nome:"3 km",icon:"🏃",dist:3000},km5:{nome:"5 km",icon:"🏅",dist:5000},km10:{nome:"10 km",icon:"🎯",dist:10000},km21:{nome:"Meia Maratona",icon:"🏆",dist:21097},km42:{nome:"Maratona",icon:"🌟",dist:42195}};
+function PRsCorridaTab(){
+  const KEY="coachPRsCorrida";
+  const[prs,setPrs]=useState(()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}");}catch{return{};}});
+  const[edit,setEdit]=useState(null);const[mm,setMM]=useState("");const[ss,setSS]=useState("");
+  const save=()=>{const sec=toSec(mm,ss);if(!sec)return;const n={...prs,[edit]:{valor:sec}};setPrs(n);localStorage.setItem(KEY,JSON.stringify(n));setEdit(null);setMM("");setSS("");};
+  return(<div>
+    <div style={{fontSize:12,fontWeight:700,color:"#aaa",textTransform:"uppercase",letterSpacing:".08em",marginBottom:12}}>Records Pessoais — Corrida</div>
+    {Object.entries(PR_CORRIDA).map(([key,d])=>{
+      const pr=prs[key];const val=pr?.valor||0;const paceM=val?Math.round(val/(d.dist/1000)):0;
+      return(<div key={key} style={{...CARD,padding:"12px 14px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:val>0?10:0}}>
+          <div style={{fontSize:26,width:36,textAlign:"center"}}>{d.icon}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700}}>{d.nome}</div>
+            {val>0?<div style={{fontSize:18,fontWeight:700,color:"#2a7a4b",marginTop:1}}>{fmtMMSS(val)}</div>:<div style={{fontSize:12,color:"#bbb",marginTop:2}}>Nao registrado</div>}
+          </div>
+          {edit===key
+            ?<div style={{display:"flex",gap:4,alignItems:"center"}}>
+                <input value={mm} onChange={e=>setMM(e.target.value)} placeholder="mm" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/>
+                <span>:</span>
+                <input value={ss} onChange={e=>setSS(e.target.value)} placeholder="ss" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/>
+                <button onClick={save} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button>
+              </div>
+            :<button onClick={()=>{setEdit(key);if(val){setMM(String(Math.floor(val/60)));setSS(String(val%60));}}} style={{padding:"7px 14px",fontSize:13,borderRadius:8,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",whiteSpace:"nowrap"}}>{val>0?"Editar":"+ PR"}</button>
+          }
+        </div>
+        {val>0&&paceM>0&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+          {[{l:"Pace/km",v:fmtMMSS(paceM),g:false},{l:"Alvo -5%",v:fmtMMSS(Math.round(paceM*.95)),g:true},{l:"Z2 +15%",v:fmtMMSS(Math.round(paceM*1.15)),g:false}].map(x=><div key={x.l} style={{background:x.g?"rgba(42,122,75,.1)":"#f5f5f3",borderRadius:8,padding:"8px",textAlign:"center"}}><div style={{fontSize:10,color:x.g?"#2a7a4b":"#888"}}>{x.l}</div><div style={{fontSize:14,fontWeight:700,color:x.g?"#2a7a4b":"#1a1a1a"}}>{x.v}</div></div>)}
+        </div>}
+      </div>);
+    })}
+  </div>);
+}
+
+// =============================================
+// PROGRESSO
+// =============================================
+function ProgressoTab({db}){
+  return(<div>{db.alunos.map(a=>{const sems=db.semanas[a.id]||[];let te=0,de=0;sems.forEach(s=>(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];te+=sss.length;de+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;}));return(<div key={a.id} style={{...CARD,padding:0,overflow:"hidden"}}><div style={{padding:"14px 16px",borderBottom:"1px solid #f2f2f0"}}><div style={{fontSize:16,fontWeight:700}}>{a.nome}</div>{a.objetivo&&<div style={{fontSize:13,color:"#888",marginTop:2}}>Objetivo: {a.objetivo}</div>}</div><div style={{padding:"14px 16px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>{[{n:sems.length,l:"Semanas"},{n:te,l:"Sessoes"},{n:te?Math.round((de/te)*100)+"%":"0%",l:"Concluido"}].map(s=><div key={s.l} style={{background:"#f5f5f3",borderRadius:10,padding:10,textAlign:"center"}}><div style={{fontSize:24,fontWeight:700}}>{s.n}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{s.l}</div></div>)}</div>{sems.map(s=>{let st=0,sd=0;(db.dias[s.id]||[]).forEach(d=>{const sss=db.sessoes[d.id]||[];st+=sss.length;sd+=sss.filter(ss=>db.done[`ss_done_${ss.id}`]).length;});return(<div key={s.id} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:14,marginBottom:5}}><span style={{fontWeight:600}}>{s.nome}</span><span style={{color:"#888"}}>{sd}/{st}</span></div><div style={{height:5,background:"#f0f0ee",borderRadius:99}}><div style={{height:"100%",width:st?`${Math.round(sd/st*100)}%`:"0%",background:"#2a7a4b",borderRadius:99,transition:"width .3s"}}/></div></div>);})}</div></div>);})}</div>);
+}
+
+// =============================================
+// HYROX TAB
+// =============================================
+const ESTACOES=[{id:"ski",nome:"SkiErg",dist:"1000m",icone:"⛷"},{id:"sled_push",nome:"Sled Push",dist:"50m",icone:"🛷"},{id:"sled_pull",nome:"Sled Pull",dist:"50m",icone:"🔗"},{id:"burpee",nome:"Burpee Broad Jump",dist:"80m",icone:"🏃"},{id:"row",nome:"Rowing",dist:"1000m",icone:"🚣"},{id:"farmers",nome:"Farmer's Carry",dist:"200m",icone:"💪"},{id:"lunge",nome:"Sandbag Lunge",dist:"100m",icone:"🎒"},{id:"wallball",nome:"Wall Ball",dist:"100 reps",icone:"🏀"}];
+function HyroxTab(){
+  const KEY="hyroxM10";const[data,setData]=useState(()=>{try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):{};}catch{return{};}});const[edit,setEdit]=useState(null);const[mm,setMM]=useState("");const[ss,setSS]=useState("");
+  const save=id=>{const sec=toSec(mm,ss);if(!sec)return;const n={...data,[id]:{tempo:sec}};setData(n);try{localStorage.setItem(KEY,JSON.stringify(n));}catch{}setEdit(null);setMM("");setSS("");};
+  const total=Object.values(data).reduce((a,v)=>a+(v?.tempo||0),0);
+  return(<div><div style={{...CARD,background:"#1a1a1a",color:"#fff",textAlign:"center",padding:"20px 16px"}}><div style={{fontSize:11,color:"#666",marginBottom:4,textTransform:"uppercase",letterSpacing:".1em"}}>Tempo Total Estimado</div><div style={{fontSize:42,fontWeight:700,fontVariantNumeric:"tabular-nums"}}>{fmtMMSS(total)}</div><div style={{fontSize:12,color:"#555",marginTop:4}}>{Object.keys(data).length}/8 estacoes</div></div>{ESTACOES.map(e=>{const sec=data[e.id]?.tempo||0;return(<div key={e.id} style={{...CARD,display:"flex",alignItems:"center",gap:12,padding:"12px 14px"}}><div style={{fontSize:28,width:40,textAlign:"center"}}>{e.icone}</div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{e.nome}</div><div style={{fontSize:11,color:"#888"}}>{e.dist}</div>{sec>0&&<div style={{fontSize:14,color:"#2a7a4b",fontWeight:700,marginTop:2}}>{fmtMMSS(sec)}</div>}</div>{edit===e.id?(<div style={{display:"flex",gap:4,alignItems:"center"}}><input value={mm} onChange={x=>setMM(x.target.value)} placeholder="mm" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/><span>:</span><input value={ss} onChange={x=>setSS(x.target.value)} placeholder="ss" inputMode="numeric" style={{...INP,width:48,textAlign:"center",fontSize:14,padding:"6px 8px"}}/><button onClick={()=>save(e.id)} style={{padding:"7px 12px",fontSize:13,borderRadius:8,border:"none",background:"#1a1a1a",color:"#fff",cursor:"pointer"}}>OK</button></div>):(<button onClick={()=>{setEdit(e.id);if(sec){setMM(String(Math.floor(sec/60)));setSS(String(sec%60));}}} style={{padding:"7px 14px",fontSize:13,borderRadius:8,border:"1px solid #e8e8e5",background:"#fff",color:"#1a1a1a",cursor:"pointer",whiteSpace:"nowrap"}}>{sec>0?"Editar":"+ Tempo"}</button>)}</div>);})}</div>);
+}
+
+// =============================================
+// PACE TAB
+// =============================================
+const PACE_DUR=[{label:"12 min",sec:720},{label:"10 min",sec:600},{label:"8 min",sec:480},{label:"6 min",sec:360},{label:"4 min",sec:240},{label:"3 min",sec:180},{label:"2 min",sec:120},{label:"1m30",sec:90},{label:"1 min",sec:60},{label:"45s",sec:45},{label:"30s",sec:30},{label:"15s",sec:15}];
+function PaceTab(){
+  const[modo,setModo]=useState("remo");const[mm,setMM]=useState("");const[ss,setSS]=useState("");const[dist,setDist]=useState("");const[alvoTipo,setAlvoTipo]=useState("pct");const[pct,setPct]=useState("5");const[alvoMM,setAlvoMM]=useState("");const[alvoSS,setAlvoSS]=useState("");const[abCal,setAbCal]=useState("");const[abMM,setAbMM]=useState("");const[abSS,setAbSS]=useState("");const[abAlvoTipo,setAbAlvoTipo]=useState("pct");const[abPct,setAbPct]=useState("5");const[abAlvoMM,setAbAlvoMM]=useState("");const[abAlvoSS,setAbAlvoSS]=useState("");
+  const baseSec=toSec(mm,ss);const baseDistM=parseInt(dist)||0;const basePace500=baseSec&&baseDistM?(baseSec/(baseDistM/500)):0;const alvoSec2=alvoTipo==="tempo"?toSec(alvoMM,alvoSS):0;const alvo=basePace500>0?(alvoSec2>0?(alvoSec2/(baseDistM/500)):basePace500*(1-parseInt(pct||0)/100)):0;const abSec=toSec(abMM,abSS);const abTargetCal=parseInt(abCal)||0;const abCPM=abSec&&abTargetCal?(abTargetCal/(abSec/60)):0;const abAlvoSec2=abAlvoTipo==="tempo"?toSec(abAlvoMM,abAlvoSS):0;const abCPMAlvo=abCPM>0?(abAlvoSec2>0?(abTargetCal/(abAlvoSec2/60)):abCPM*(1+parseInt(abPct||0)/100)):0;const abAlvoSecFinal=abCPMAlvo?(abTargetCal/abCPMAlvo)*60:0;
+  return(<div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>{[{id:"remo",l:"Remo"},{id:"ski",l:"SkiErg"},{id:"assault",l:"Assault Bike"}].map(m=><Pill key={m.id} label={m.l} active={modo===m.id} onClick={()=>setModo(m.id)}/>)}</div>
+    {(modo==="remo"||modo==="ski")&&<div><div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>Resultado do teste</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:8}}><Field label="Distancia (m)"><input style={INP} value={dist} onChange={e=>setDist(e.target.value)} inputMode="numeric" placeholder="2000"/></Field><Field label="Tempo (mm)"><input style={INP} value={mm} onChange={e=>setMM(e.target.value)} inputMode="numeric" placeholder="7"/></Field><Field label="Tempo (ss)"><input style={INP} value={ss} onChange={e=>setSS(e.target.value)} inputMode="numeric" placeholder="30"/></Field></div><div style={{fontSize:12,fontWeight:600,textTransform:"uppercase",color:"#aaa",marginBottom:8}}>Melhora alvo</div><div style={{display:"flex",gap:6,marginBottom:10}}><button onClick={()=>setAlvoTipo("pct")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="pct"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="pct"?"#fff":"#888",cursor:"pointer"}}>Por %</button><button onClick={()=>setAlvoTipo("tempo")} style={{flex:1,padding:"9px 0",fontSize:13,borderRadius:10,border:"none",background:alvoTipo==="tempo"?"#1a1a1a":"#f0f0ee",color:alvoTipo==="tempo"?"#fff":"#888",cursor:"pointer"}}>Por tempo</button></div>{alvoTipo==="pct"&&<div style={{display:"flex",alignItems:"center",gap:10}}><input style={{...INP,width:80,textAlign:"center"}} value={pct} onChange={e=>setPct(e.target.value)} inputMode="numeric" placeholder="5"/><span style={{fontSize:14,color:"#888"}}>% de melhora</span></div>}{alvoTipo==="tempo"&&<div style={{display:"flex",gap:8,alignItems:"center"}}><input style={{...INP,width:70,textAlign:"center"}} value={alvoMM} onChange={e=>setAlvoMM(e.target.value)} inputMode="numeric" placeholder="mm"/><span>:</span><input style={{...INP,width:70,textAlign:"center"}} value={alvoSS} onChange={e=>setAlvoSS(e.target.value)} inputMode="numeric" placeholder="ss"/></div>}</div>{basePace500>0&&alvo>0&&<div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:12}}>{modo==="ski"?"SkiErg":"Remo"} — Pace/500m</div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}><div style={{background:"#f5f5f3",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#888"}}>Atual</div><div style={{fontSize:26,fontWeight:700}}>{fmtMMSS(Math.round(basePace500))}</div></div><div style={{background:"#edf7f2",border:"1px solid #b5dcc7",borderRadius:10,padding:"10px 12px",textAlign:"center"}}><div style={{fontSize:11,color:"#2a7a4b"}}>Alvo</div><div style={{fontSize:26,fontWeight:700,color:"#2a7a4b"}}>{fmtMMSS(Math.round(alvo))}</div></div></div><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}><thead><tr>{["Duracao","Dist Atual","Dist Alvo"].map(h=><th key={h} style={{textAlign:"left",padding:"5px 6px",color:"#888",fontWeight:600,fontSize:11,borderBottom:"1px solid #f0f0ee"}}>{h}</th>)}</tr></thead><tbody>{PACE_DUR.map(t=>{const dA=Math.round(t.sec/basePace500*500);const dAl=Math.round(t.sec/alvo*500);return(<tr key={t.sec} style={{borderBottom:"1px solid #f8f8f6"}}><td style={{padding:"6px 6px",fontWeight:500}}>{t.label}</td><td style={{padding:"6px 6px",color:"#555"}}>{dA}m</td><td style={{padding:"6px 6px",color:"#2a7a4b",fontWeight:600}}>{dAl}m</td></tr>);})}</tbody></table></div>}</div>}
+    {modo==="assault"&&<div><div style={CARD}><div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Assault Bike</div><div style={{fontSize:12,color:"#888",marginBottom:12}}>Tempo para atingir X calorias</div><Field label="Calorias realizadas"><input style={INP} value={abCal} onChange={e=>setAbCal(e.target.value)} inputMode="numeric" placeholder="50"/></Field><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><Field label="Tempo (mm)"><input style={INP} value={abMM} onChange={e=>setAbMM(e.target.value)} inputMode="numeric" placeholder="1"/></Field><Field label="Tempo (ss)"><input style={INP} value={abSS} onChange={e=>setAbSS(e.target.value)} inputMode="numeric" placeholder="45"/></Field></div></div></div>}
+  </div>);
+}
+
+// =============================================
+// VIDEOS TAB
+// =============================================
+function VideosTab({cats}){
+  const KEY="coachVideosDB";
+  const[videos,setVideos]=useState(()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]");}catch{return[];}});
+  const[open,setOpen]=useState(false);const[form,setForm]=useState({nome:"",cat:cats[0]||"",url:"",desc:""});const[filtro,setFiltro]=useState("Todos");
+  const save=()=>{if(!form.nome||!form.url)return;const n=[...videos,{id:uid(),...form,ts:Date.now()}];setVideos(n);localStorage.setItem(KEY,JSON.stringify(n));setOpen(false);setForm({nome:"",cat:cats[0]||"",url:"",desc:""});};
+  const del=id=>{const n=videos.filter(v=>v.id!==id);setVideos(n);localStorage.setItem(KEY,JSON.stringify(n));};
+  const thumb=url=>{const m=url.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{11})/);return m?`https://img.youtube.com/vi/${m[1]}/mqdefault.jpg`:null;};
+  const list=filtro==="Todos"?videos:videos.filter(v=>v.cat===filtro);
+  return(<div>
+    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>{["Todos",...cats].map(c=><Pill key={c} label={c} active={filtro===c} onClick={()=>setFiltro(c)}/>)}</div>
+    <button onClick={()=>setOpen(true)} style={{width:"100%",padding:"12px",borderRadius:12,border:"2px dashed #e0e0dc",background:"transparent",color:"#888",fontSize:14,cursor:"pointer",marginBottom:16,fontWeight:500}}>+ Adicionar vídeo</button>
+    {list.length===0&&<div style={{textAlign:"center",padding:"40px 20px",color:"#bbb"}}><div style={{fontSize:44,marginBottom:12}}>🎥</div><div style={{fontSize:14,fontWeight:600}}>Nenhum vídeo ainda</div><div style={{fontSize:12,marginTop:4}}>Adicione links do YouTube dos exercícios</div></div>}
+    {list.map(v=>{const t=thumb(v.url);return(<div key={v.id} className="vcardx">
+      <div className="vthumb">{t?<img src={t} alt=""/>:<span>🎥</span>}</div>
+      <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:"#1a1a1a"}}>{v.nome}</div><div style={{fontSize:11,color:"#999",marginTop:2}}>{v.cat}{v.desc&&" · "+v.desc}</div></div>
+      <button className="vplay" onClick={()=>window.open(v.url,"_blank")}>▶</button>
+      <button onClick={()=>del(v.id)} style={{background:"none",border:"none",color:"#ddd",cursor:"pointer",fontSize:18,padding:"0 2px"}}>×</button>
+    </div>);})}
+    <Sheet open={open} onClose={()=>setOpen(false)} title="Novo Vídeo">
+      <Field label="Nome do exercicio"><input style={INP} value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Ex: Sandbag Lunge tecnica"/></Field>
+      <Field label="Categoria"><select style={INP} value={form.cat} onChange={e=>setForm(f=>({...f,cat:e.target.value}))}>{cats.map(c=><option key={c}>{c}</option>)}</select></Field>
+      <Field label="Link YouTube"><input style={INP} value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))} placeholder="https://youtube.com/watch?v=..."/></Field>
+      <Field label="Descricao (opcional)"><input style={INP} value={form.desc} onChange={e=>setForm(f=>({...f,desc:e.target.value}))} placeholder="Dica tecnica..."/></Field>
+      <div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setOpen(false)}>Cancelar</button><button style={BTNOK} onClick={save}>Salvar</button></div>
+    </Sheet>
+  </div>);
+}
+
+// =============================================
+// APP HYROX
+// =============================================
+const TABS_H=[{id:"treinos",label:"Treinos",icon:"📋"},{id:"prs",label:"PRs",icon:"🏆"},{id:"progresso",label:"Progresso",icon:"📈"},{id:"hyrox",label:"Hyrox",icon:"⚡"},{id:"pace",label:"Pace",icon:"🎯"},{id:"videos",label:"Vídeos",icon:"🎥"}];
+const VCATS_H=["SkiErg","Sled Push","Sled Pull","Burpee Broad Jump","Rowing","Farmer's Carry","Sandbag Lunge","Wall Ball","Forca","Corrida","Mobilidade"];
+
+function AppHyrox({onBack}){
+  const[db,update,loaded]=useDB();const[modo,entrar,sair]=useModo();const[tab,setTab]=useState("treinos");
+  if(!loaded)return(<div className="app-wrap"><div style={{display:"flex",alignItems:"center",justifyContent:"center",flex:1,color:"#888",fontSize:14}}>Carregando...</div></div>);
+  return(<div className="app-wrap">
+    <div className="app-hdr"><button className="app-back" onClick={onBack}>‹</button><div className="app-title">⚡ HYROX</div><BotaoModo modo={modo} entrar={entrar} sair={sair}/></div>
+    <div className="app-body">
+      {tab==="treinos"&&<TreinosTab db={db} update={update} isCoach={modo==="coach"}/>}
+      {tab==="prs"&&<PRsTab db={db} update={update}/>}
+      {tab==="progresso"&&<ProgressoTab db={db}/>}
+      {tab==="hyrox"&&<HyroxTab/>}
+      {tab==="pace"&&<PaceTab/>}
+      {tab==="videos"&&<VideosTab cats={VCATS_H}/>}
+    </div>
+    <div className="app-nav">{TABS_H.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 2px 14px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:15}}>{t.icon}</span><span style={{fontSize:9,color:tab===t.id?"#1a1a1a":"#bbb",fontWeight:tab===t.id?700:400}}>{t.label}</span>{tab===t.id&&<div style={{width:16,height:2,background:"#1a1a1a",borderRadius:1,marginTop:1}}/>}</button>)}</div>
+  </div>);
+}
+
+// =============================================
+// APP CORRIDA
+// =============================================
+const TABS_C=[{id:"treinos",label:"Treinos",icon:"📋"},{id:"prs",label:"PRs",icon:"🏆"},{id:"pace",label:"Pace",icon:"🎯"},{id:"videos",label:"Vídeos",icon:"🎥"}];
+const VCATS_C=["Tecnica","Fartlek","Intervalado","Longao","Core","Fortalecimento"];
+
+function AppCorrida({onBack}){
+  const[db,update,loaded]=useDB();const[modo,entrar,sair]=useModo();const[tab,setTab]=useState("treinos");
+  if(!loaded)return null;
+  return(<div className="app-wrap">
+    <div className="app-hdr"><button className="app-back" onClick={onBack}>‹</button><div className="app-title">🏃 Corrida</div><BotaoModo modo={modo} entrar={entrar} sair={sair}/></div>
+    <div className="app-body">
+      {tab==="treinos"&&<TreinosTab db={db} update={update} isCoach={modo==="coach"}/>}
+      {tab==="prs"&&<PRsCorridaTab/>}
+      {tab==="pace"&&<PaceTab/>}
+      {tab==="videos"&&<VideosTab cats={VCATS_C}/>}
+    </div>
+    <div className="app-nav">{TABS_C.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px 14px",border:"none",background:"transparent",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}><span style={{fontSize:18}}>{t.icon}</span><span style={{fontSize:10,color:tab===t.id?"#1a1a1a":"#bbb",fontWeight:tab===t.id?700:400}}>{t.label}</span>{tab===t.id&&<div style={{width:20,height:2,background:"#1a1a1a",borderRadius:1,marginTop:1}}/>}</button>)}</div>
+  </div>);
+}
+
+// =============================================
+// EM BREVE
+// =============================================
+function AppEmBreve({modal,onBack}){
+  return(<div style={{minHeight:"100vh",background:"#0a0a0a",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,position:"relative"}}>
+    <button onClick={onBack} style={{position:"absolute",top:20,left:20,background:"rgba(255,255,255,.08)",border:"none",color:"#fff",borderRadius:10,padding:"8px 16px",cursor:"pointer",fontSize:14}}>‹ Voltar</button>
+    <div style={{fontSize:64,marginBottom:16}}>{modal?.icon}</div>
+    <div style={{fontSize:24,fontWeight:800,color:"#fff",marginBottom:8}}>{modal?.nome}</div>
+    <div style={{fontSize:15,color:"#444",textAlign:"center",maxWidth:260,lineHeight:1.6}}>Interface em desenvolvimento. Em breve disponível!</div>
+  </div>);
+}
+
+// =============================================
+// ROOT
+// =============================================
+function App(){
+  const[user,setUser]=useState(undefined);
+  const[modal,setModal]=useState(null);
+
+  useEffect(()=>{
+    const unsub=fbAuth.onAuthStateChanged(u=>setUser(u||null));
+    return unsub;
+  },[]);
+
+  if(user===undefined){
+    return(<div className="loading">
+      <div style={{fontSize:22,fontWeight:900,letterSpacing:"-1px"}}>Coach<span style={{color:"#00e676"}}>RX</span></div>
+      <div style={{width:6,height:6,borderRadius:"50%",background:"#00e676",animation:"pulse 1s ease infinite"}}/>
+    </div>);
+  }
+
+  if(!user)return <LoginScreen/>;
+
+  if(modal){
+    if(modal==="hyrox")return <AppHyrox onBack={()=>setModal(null)}/>;
+    if(modal==="corrida")return <AppCorrida onBack={()=>setModal(null)}/>;
+    const m=MODALS.find(x=>x.id===modal);
+    return <AppEmBreve modal={m} onBack={()=>setModal(null)}/>;
+  }
+
+  return <Dashboard user={user} onSelect={setModal} onSignOut={()=>{fbAuth.signOut();setModal(null);}}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
