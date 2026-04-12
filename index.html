@@ -36,10 +36,23 @@ const SEED={
     {id:"darfine01",nome:"Darfine",objetivo:""},
   ],
   semanas:{
-    camila01:[{id:"sem01",nome:"Semana 1",obs:"Testes de base"},{id:"sem02",nome:"Semana 2",obs:"Volume especifico"}],
-    kenny01:[{id:"sem02k",nome:"Semana 2",obs:"Volume especifico"}],
-    thiago01:[{id:"sem02t",nome:"Semana 2",obs:"Volume especifico"}],
-    darfine01:[{id:"sem02d",nome:"Semana 2",obs:"Volume especifico"}],
+    camila01:[
+      {id:"sem01",nome:"Semana 1",obs:"Testes de base"},
+      {id:"sem02",nome:"Semana 2",obs:"Volume especifico"},
+      {id:"sem03",nome:"Semana 3",obs:"Ultima semana — volume reduzido, intensidade maxima"},
+    ],
+    kenny01:[
+      {id:"sem02k",nome:"Semana 2",obs:"Volume especifico"},
+      {id:"sem03k",nome:"Semana 3",obs:"Ultima semana — volume reduzido, intensidade maxima"},
+    ],
+    thiago01:[
+      {id:"sem02t",nome:"Semana 2",obs:"Volume especifico"},
+      {id:"sem03t",nome:"Semana 3",obs:"Ultima semana — volume reduzido, intensidade maxima"},
+    ],
+    darfine01:[
+      {id:"sem02d",nome:"Semana 2",obs:"Volume especifico"},
+      {id:"sem03d",nome:"Semana 3",obs:"Ultima semana — volume reduzido, intensidade maxima"},
+    ],
   },
   dias:{
     sem01:[
@@ -58,6 +71,14 @@ const SEED={
       {id:"w2d05",nome:"Sexta",foco:"EMOM 32 min HYROX"},
       {id:"w2d06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"},
     ],
+    sem03:[
+      {id:"s3d01",nome:"Segunda",foco:"Preparacao Simulado — 3 Blocos + Core"},
+      {id:"s3d02",nome:"Terca",foco:"Corrida Kenny + Simulado Dupla + Saideira + Grip"},
+      {id:"s3d03",nome:"Quarta",foco:"SkiErg Intervalos + Farmer Carry"},
+      {id:"s3d04",nome:"Quinta",foco:"Corrida Kenny + Remo SPM + Forca HYROX"},
+      {id:"s3d05",nome:"Sexta",foco:"Escada Row/Burpee + Snatch + EMOM Run"},
+      {id:"s3d06",nome:"Sabado",foco:"Longao Kenny + Potencia Bike"},
+    ],
     sem02k:[
       {id:"kd01",nome:"Segunda",foco:"Corrida + Simulado + Core"},
       {id:"kd02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},
@@ -65,6 +86,14 @@ const SEED={
       {id:"kd04",nome:"Quinta",foco:"Corrida Kenny + Forca + Remo SPM"},
       {id:"kd05",nome:"Sexta",foco:"EMOM 32 min HYROX"},
       {id:"kd06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"},
+    ],
+    sem03k:[
+      {id:"s3kd01",nome:"Segunda",foco:"Preparacao Simulado — 3 Blocos + Core"},
+      {id:"s3kd02",nome:"Terca",foco:"Corrida Kenny + Simulado Dupla + Saideira + Grip"},
+      {id:"s3kd03",nome:"Quarta",foco:"SkiErg Intervalos + Farmer Carry"},
+      {id:"s3kd04",nome:"Quinta",foco:"Corrida Kenny + Remo SPM + Forca HYROX"},
+      {id:"s3kd05",nome:"Sexta",foco:"Escada Row/Burpee + Snatch + EMOM Run"},
+      {id:"s3kd06",nome:"Sabado",foco:"Longao Kenny + Potencia Bike"},
     ],
     sem02t:[
       {id:"td01",nome:"Segunda",foco:"Corrida + Simulado + Core"},
@@ -74,6 +103,14 @@ const SEED={
       {id:"td05",nome:"Sexta",foco:"EMOM 32 min HYROX"},
       {id:"td06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"},
     ],
+    sem03t:[
+      {id:"s3td01",nome:"Segunda",foco:"Preparacao Simulado — 3 Blocos + Core"},
+      {id:"s3td02",nome:"Terca",foco:"Corrida Kenny + Simulado Dupla + Saideira + Grip"},
+      {id:"s3td03",nome:"Quarta",foco:"SkiErg Intervalos + Farmer Carry"},
+      {id:"s3td04",nome:"Quinta",foco:"Corrida Kenny + Remo SPM + Forca HYROX"},
+      {id:"s3td05",nome:"Sexta",foco:"Escada Row/Burpee + Snatch + EMOM Run"},
+      {id:"s3td06",nome:"Sabado",foco:"Longao Kenny + Potencia Bike"},
+    ],
     sem02d:[
       {id:"dd01",nome:"Segunda",foco:"Corrida + Simulado + Core"},
       {id:"dd02",nome:"Terca",foco:"Corrida Kenny + Bike + Sandbag Lunge"},
@@ -82,14 +119,24 @@ const SEED={
       {id:"dd05",nome:"Sexta",foco:"EMOM 32 min HYROX"},
       {id:"dd06",nome:"Sabado",foco:"Longao + Potencia + Forca Grip"},
     ],
+    sem03d:[
+      {id:"s3dd01",nome:"Segunda",foco:"Preparacao Simulado — 3 Blocos + Core"},
+      {id:"s3dd02",nome:"Terca",foco:"Corrida Kenny + Simulado Dupla + Saideira + Grip"},
+      {id:"s3dd03",nome:"Quarta",foco:"SkiErg Intervalos + Farmer Carry"},
+      {id:"s3dd04",nome:"Quinta",foco:"Corrida Kenny + Remo SPM + Forca HYROX"},
+      {id:"s3dd05",nome:"Sexta",foco:"Escada Row/Burpee + Snatch + EMOM Run"},
+      {id:"s3dd06",nome:"Sabado",foco:"Longao Kenny + Potencia Bike"},
+    ],
   },
   sessoes:{
+    // ── SEMANA 1 ──────────────────────────────────────────────
     d01:[{id:"s01",nome:"Remo — aquecimento"},{id:"s02",nome:"Remo — parte principal"},{id:"s03",nome:"Workout — 3 rounds"},{id:"s04",nome:"Forca"},{id:"s05",nome:"Core — 3 rounds"}],
     d02:[{id:"s06",nome:"Bike — teste 12 min"}],
     d03:[{id:"s08",nome:"Ski — teste"},{id:"s10",nome:"Forca HYROX"}],
     d04:[{id:"s11",nome:"Bike — intervalos"}],
     d05:[{id:"s12",nome:"Remo — volume"},{id:"s13",nome:"Potencia — 5 rounds"}],
     d06:[{id:"s15",nome:"EMOM 30 min"},{id:"s16",nome:"Wall Ball extra"}],
+    // ── SEMANA 2 (Camila) ─────────────────────────────────────
     w2d01:[
       {id:"w2s01",nome:"Aquecimento",desc:"Corrida trote leve 10 min.\nRitmo confortavel, RPE 3-4."},
       {id:"w2s02",nome:"Parte Principal — Preparacao para Simulado",desc:"5 blocos com rest de 2 min.\n\nBloco 1\n300m corrida + 2min SkiErg + 200m corrida\n\nBloco 2\n300m corrida + 25m Sled Push + 200m corrida\n\nBloco 3\n300m corrida + 25m Sled Pull + 200m corrida\n\nBloco 4\n300m corrida + 40m Burpee Broad Jump + 200m corrida\n\nBloco 5\n300m corrida + 2min Remo + 200m corrida\nRest 10 min"},
@@ -119,6 +166,7 @@ const SEED={
       {id:"w2s15",nome:"Potencia — Ativacao ATP-CP (5 rounds)",desc:"5 rounds, rest 3-5 min.\nBike 10s potencia maxima\nJump Squat 4 reps explosivo"},
       {id:"w2s16",nome:"Forca — Circuito de Grip (3 rounds)",desc:"Dead Hang 3 series — duracao maxima\nPlate Pinch 3x45s\nDumbbell Head Pinch 3x45s\nFarmer Hold — acumular 3 min"},
     ],
+    // ── SEMANA 2 (outros alunos) ──────────────────────────────
     kd01:[{id:"w2s01",nome:"Aquecimento"},{id:"w2s02",nome:"Parte Principal"},{id:"w2s03",nome:"Saideira Wall Ball"},{id:"w2s04",nome:"Core"}],
     kd02:[{id:"w2s05",nome:"Corrida do Kenny"},{id:"w2s06",nome:"Bike Intervalado"},{id:"w2s07",nome:"Saideira Sandbag"}],
     kd03:[{id:"w2s08",nome:"SkiErg Aquecimento"},{id:"w2s09",nome:"SkiErg Principal"},{id:"w2s10",nome:"Circuito Corporal"}],
@@ -137,8 +185,62 @@ const SEED={
     dd04:[{id:"w2s11",nome:"Corrida do Kenny"},{id:"w2s12",nome:"Forca HYROX"},{id:"w2s13b",nome:"Remo por SPM"}],
     dd05:[{id:"w2s13",nome:"EMOM 32 min HYROX"}],
     dd06:[{id:"w2s14",nome:"Longao do Kenny"},{id:"w2s15",nome:"Potencia ATP-CP"},{id:"w2s16",nome:"Grip Circuit"}],
+    // ── SEMANA 3 — dias (compartilhados via mesmos IDs de sessao) ──
+    s3d01:[
+      {id:"s3s01",nome:"Aquecimento",desc:"10 min corrida trote leve."},
+      {id:"s3s02",nome:"Bloco 1 — 3 rounds ritmo de prova",desc:"800m run\n20 wall balls\n20 air squats\nRest 60s entre rounds\nRest 3 min apos o bloco"},
+      {id:"s3s03",nome:"Bloco 2 — 4 rounds ritmo de prova",desc:"600m run (mais rapido que pace de prova)\nSled push 20m\nSled pull 20m\n10 burpee broad jump\nRest 1'30\" entre rounds\nRest 3 min apos o bloco"},
+      {id:"s3s04",nome:"Bloco 3 — 3 rounds continuos ritmo de prova",desc:"Ski 500m\nRun 400m\nRow 500m\nRun 400m\nRest 10 min apos o bloco"},
+      {id:"s3s05",nome:"Core — 3 rounds",desc:"V-up 20 reps\nL-sit Hell Over 15/15\nFlutter kick 30 reps"},
+    ],
+    s3d02:[
+      {id:"s3s06",nome:"Treino 1 — Corrida do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"s3s07",nome:"Treino 2 — Simulado em dupla",desc:"Treinar trocas no:\nSki\nSled\nRemo"},
+      {id:"s3s08",nome:"Saideira — For Time (Time Cap 10 min)",desc:"100 passos Walking Lunge\nH 40kg / M 30kg"},
+      {id:"s3s09",nome:"Forca — Grip (Circuito 3x)",desc:"Dead Hang — 1 min — Rest 1 min\nPlate Pinch — 45s — Rest 1 min\nDumbbell Head Pinch — 45s — Rest 1 min\nFarmer Carry — maxima distancia unbroken (peso de prova)"},
+    ],
+    s3d03:[
+      {id:"s3s10",nome:"SkiErg — Aquecimento",desc:"10 min aquecimento\nDescanso 3 min"},
+      {id:"s3s11",nome:"SkiErg — Principal",desc:"1000m — Rest 30s — pace dos 2km\n300m — Rest 1 min — pace alvo\n1000m — Rest 30s — pace dos 2km\n200m — Rest 30s — 3-5s abaixo do pace alvo\n200m — Rest 1 min — 3-5s abaixo do pace alvo\n1000m — Rest 30s — pace dos 2km\n150m — Rest 30s — 3-5s abaixo do pace alvo\n150m — Rest 1 min — 3-5s abaixo do pace alvo\nRest 10 min"},
+      {id:"s3s12",nome:"Farmer Carry",desc:"Maxima distancia unbroken — peso de prova\n+\nAcumular 3 min com no maximo 5 quebras"},
+    ],
+    s3d04:[
+      {id:"s3s13",nome:"Treino 1 — Corrida do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"s3s14",nome:"Saideira — Remo por SPM (7.000m)",desc:"3.500m a 22-24 SPM — Rest 3 min\n3.500m a 22-24 SPM\nRest 10 min"},
+      {id:"s3s15",nome:"Forca — HYROX",desc:"Sled Pull — 3x30m\nSled Push — 3x20m\nDeadlift: 1x15@40% | 1x12@45% | 1x8@50% | 3x6@60%"},
+    ],
+    s3d05:[
+      {id:"s3s16",nome:"Aquecimento — 10 min Bike",desc:"Bike leve, baixa intensidade."},
+      {id:"s3s17",nome:"Bloco 1 — Escada Row + Burpee",desc:"Ate falhar o minuto ou cap 20 min (o que vier primeiro)\n\nRodada 1: 10/7 cal row + 6 burpee\nRodada 2: 11/8 cal row + 7 burpee\n(+1 cal row e +1 burpee a cada rodada)\n...\nRodada 15: 17/14 cal row + 13 burpee\n\nRest 5 min"},
+      {id:"s3s18",nome:"Bloco 2 — A cada 2'30\" x 4",desc:"Rest 1'30\" entre rounds\n\n10 Squat Snatch — H 35kg / M 25kg\n18/15 cal ski\nMax rep Wall Ball\n\nRest 5 min"},
+      {id:"s3s19",nome:"Bloco 3 — EMOM 20 min",desc:"Min impar: 200m run\nMin par: 8 devil deadlift"},
+    ],
+    s3d06:[
+      {id:"s3s20",nome:"Treino 1 — Longao do Kenny",desc:"Seguir protocolo Kenny.\nRegistrar distancia e pace medio."},
+      {id:"s3s21",nome:"Potencia — 5 rounds",desc:"10s potencia maxima na bike\n3 jumps — saltar mais alto possivel\nDescanso 3-5 min entre series"},
+    ],
+    // ── SEMANA 3 — outros alunos (referenciam as mesmas sessoes) ──
+    s3kd01:[{id:"s3s01",nome:"Aquecimento"},{id:"s3s02",nome:"Bloco 1 — 3 rounds"},{id:"s3s03",nome:"Bloco 2 — 4 rounds"},{id:"s3s04",nome:"Bloco 3 — 3 rounds continuos"},{id:"s3s05",nome:"Core — 3 rounds"}],
+    s3kd02:[{id:"s3s06",nome:"Corrida do Kenny"},{id:"s3s07",nome:"Simulado em dupla"},{id:"s3s08",nome:"Saideira Walking Lunge"},{id:"s3s09",nome:"Grip Circuit"}],
+    s3kd03:[{id:"s3s10",nome:"SkiErg Aquecimento"},{id:"s3s11",nome:"SkiErg Principal"},{id:"s3s12",nome:"Farmer Carry"}],
+    s3kd04:[{id:"s3s13",nome:"Corrida do Kenny"},{id:"s3s14",nome:"Remo SPM"},{id:"s3s15",nome:"Forca HYROX"}],
+    s3kd05:[{id:"s3s16",nome:"Aquecimento Bike"},{id:"s3s17",nome:"Bloco 1 Escada"},{id:"s3s18",nome:"Bloco 2 Snatch"},{id:"s3s19",nome:"Bloco 3 EMOM"}],
+    s3kd06:[{id:"s3s20",nome:"Longao do Kenny"},{id:"s3s21",nome:"Potencia — 5 rounds"}],
+    s3td01:[{id:"s3s01",nome:"Aquecimento"},{id:"s3s02",nome:"Bloco 1 — 3 rounds"},{id:"s3s03",nome:"Bloco 2 — 4 rounds"},{id:"s3s04",nome:"Bloco 3 — 3 rounds continuos"},{id:"s3s05",nome:"Core — 3 rounds"}],
+    s3td02:[{id:"s3s06",nome:"Corrida do Kenny"},{id:"s3s07",nome:"Simulado em dupla"},{id:"s3s08",nome:"Saideira Walking Lunge"},{id:"s3s09",nome:"Grip Circuit"}],
+    s3td03:[{id:"s3s10",nome:"SkiErg Aquecimento"},{id:"s3s11",nome:"SkiErg Principal"},{id:"s3s12",nome:"Farmer Carry"}],
+    s3td04:[{id:"s3s13",nome:"Corrida do Kenny"},{id:"s3s14",nome:"Remo SPM"},{id:"s3s15",nome:"Forca HYROX"}],
+    s3td05:[{id:"s3s16",nome:"Aquecimento Bike"},{id:"s3s17",nome:"Bloco 1 Escada"},{id:"s3s18",nome:"Bloco 2 Snatch"},{id:"s3s19",nome:"Bloco 3 EMOM"}],
+    s3td06:[{id:"s3s20",nome:"Longao do Kenny"},{id:"s3s21",nome:"Potencia — 5 rounds"}],
+    s3dd01:[{id:"s3s01",nome:"Aquecimento"},{id:"s3s02",nome:"Bloco 1 — 3 rounds"},{id:"s3s03",nome:"Bloco 2 — 4 rounds"},{id:"s3s04",nome:"Bloco 3 — 3 rounds continuos"},{id:"s3s05",nome:"Core — 3 rounds"}],
+    s3dd02:[{id:"s3s06",nome:"Corrida do Kenny"},{id:"s3s07",nome:"Simulado em dupla"},{id:"s3s08",nome:"Saideira Walking Lunge"},{id:"s3s09",nome:"Grip Circuit"}],
+    s3dd03:[{id:"s3s10",nome:"SkiErg Aquecimento"},{id:"s3s11",nome:"SkiErg Principal"},{id:"s3s12",nome:"Farmer Carry"}],
+    s3dd04:[{id:"s3s13",nome:"Corrida do Kenny"},{id:"s3s14",nome:"Remo SPM"},{id:"s3s15",nome:"Forca HYROX"}],
+    s3dd05:[{id:"s3s16",nome:"Aquecimento Bike"},{id:"s3s17",nome:"Bloco 1 Escada"},{id:"s3s18",nome:"Bloco 2 Snatch"},{id:"s3s19",nome:"Bloco 3 EMOM"}],
+    s3dd06:[{id:"s3s20",nome:"Longao do Kenny"},{id:"s3s21",nome:"Potencia — 5 rounds"}],
   },
   exercicios:{
+    // ── SEMANA 1 ──────────────────────────────────────────────
     s04:[
       {id:"e020",nome:"Back Squat",sub:"1x10@55% | 1x8@60% | 1x6@65% | 1x6@70% | 1x6@75%",timer:0,note:true,rest:false,pr:"back_squat",pcts:[55,60,65,70,75],reps:[10,8,6,6,6]},
       {id:"e025",nome:"Goblet Lateral Squat",sub:"4x10",timer:0,note:true,rest:false},
@@ -155,6 +257,7 @@ const SEED={
     s13:[{id:"e073",nome:"10s bike potencia maxima",timer:10,note:false,rest:false,pr:"assault"},{id:"e075",nome:"Descanso 3-5 min",timer:240,note:false,rest:true}],
     s15:[{id:"e083",nome:"Row 15 cal / Min",sub:"EMOM",timer:0,note:true,rest:false,pr:"remo"},{id:"e085",nome:"SkiErg 15 cal / Min",sub:"EMOM",timer:0,note:true,rest:false,pr:"ski"}],
     s16:[{id:"e088",nome:"40 Wall Ball unbroken",timer:0,note:true,rest:false},{id:"e089",nome:"Rest 2 min",timer:120,note:false,rest:true},{id:"e090",nome:"3x25 Wall Ball",sub:"Rest 1 min entre series",timer:0,note:true,rest:false}],
+    // ── SEMANA 2 ──────────────────────────────────────────────
     w2s01:[{id:"w2e001",nome:"Corrida trote leve",sub:"10 min — RPE 3-4",timer:600,note:false,rest:false}],
     w2s02:[
       {id:"w2e002",nome:"Bloco 1 — 300m corrida + 2min Ski + 200m corrida",sub:"Ski no pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
@@ -183,6 +286,107 @@ const SEED={
     w2s14:[{id:"w2e061",nome:"Longao do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
     w2s15:[{id:"w2e062",nome:"Bike — 10s potencia maxima",timer:10,note:false,rest:false,pr:"assault"},{id:"w2e063",nome:"Jump Squat — 4 reps",sub:"Explosivo, sem carga",timer:0,note:false,rest:false},{id:"w2e064",nome:"Descanso 3-5 min",sub:"Recuperacao completa",timer:240,note:false,rest:true}],
     w2s16:[{id:"w2e065",nome:"Dead Hang — 3 series",sub:"Duracao maxima. Registrar tempo.",timer:0,note:true,rest:false},{id:"w2e066",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e067",nome:"Plate Pinch — 3x45s",timer:45,note:true,rest:false},{id:"w2e068",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e069",nome:"Dumbbell Head Pinch — 3x45s",timer:45,note:true,rest:false},{id:"w2e070",nome:"Rest 1 min",timer:60,note:false,rest:true},{id:"w2e071",nome:"Farmer Hold — acumular 3 min",sub:"Peso acima do de prova.",timer:0,note:true,rest:false}],
+    // ── SEMANA 3 — exercicios ─────────────────────────────────
+    s3s01:[{id:"s3e001",nome:"Corrida trote leve — 10 min",sub:"RPE 3-4",timer:600,note:false,rest:false}],
+    s3s02:[
+      {id:"s3e002",nome:"800m run",timer:0,note:true,rest:false},
+      {id:"s3e003",nome:"20 wall balls",sub:"Peso oficial de prova",timer:0,note:true,rest:false},
+      {id:"s3e004",nome:"20 air squats",timer:0,note:false,rest:false},
+      {id:"s3e005",nome:"Rest 60s",timer:60,note:false,rest:true},
+      {id:"s3e006",nome:"Rest 3 min apos o bloco",timer:180,note:false,rest:true},
+    ],
+    s3s03:[
+      {id:"s3e007",nome:"600m run",sub:"Mais rapido que pace de prova",timer:0,note:true,rest:false},
+      {id:"s3e008",nome:"Sled push 20m",sub:"Unbroken",timer:0,note:true,rest:false},
+      {id:"s3e009",nome:"Sled pull 20m",sub:"Unbroken",timer:0,note:true,rest:false},
+      {id:"s3e010",nome:"10 burpee broad jump",timer:0,note:true,rest:false},
+      {id:"s3e011",nome:"Rest 1'30\"",timer:90,note:false,rest:true},
+      {id:"s3e012",nome:"Rest 3 min apos o bloco",timer:180,note:false,rest:true},
+    ],
+    s3s04:[
+      {id:"s3e013",nome:"Ski 500m",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e014",nome:"Run 400m",timer:0,note:true,rest:false},
+      {id:"s3e015",nome:"Row 500m",timer:0,note:true,rest:false,pr:"remo"},
+      {id:"s3e016",nome:"Run 400m",timer:0,note:true,rest:false},
+      {id:"s3e017",nome:"Rest 10 min apos o bloco",timer:600,note:false,rest:true},
+    ],
+    s3s05:[
+      {id:"s3e018",nome:"V-up — 20 reps",timer:0,note:false,rest:false},
+      {id:"s3e019",nome:"L-sit Hell Over — 15/15",timer:0,note:false,rest:false,link:"https://www.youtube.com/watch?v=VY9pN4iTVEs&t=7s"},
+      {id:"s3e020",nome:"Flutter kick — 30 reps",timer:0,note:false,rest:false},
+    ],
+    s3s06:[{id:"s3e021",nome:"Corrida do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    s3s07:[
+      {id:"s3e022",nome:"Simulado — trocas no Ski",sub:"Treinar transicoes em dupla",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e023",nome:"Simulado — trocas no Sled",sub:"Treinar transicoes em dupla",timer:0,note:true,rest:false},
+      {id:"s3e024",nome:"Simulado — trocas no Remo",sub:"Treinar transicoes em dupla",timer:0,note:true,rest:false,pr:"remo"},
+    ],
+    s3s08:[{id:"s3e025",nome:"For Time — Time Cap 10 min",sub:"100 passos Walking Lunge — H 40kg / M 30kg",timer:600,note:true,rest:false}],
+    s3s09:[
+      {id:"s3e026",nome:"Dead Hang — 1 min",timer:60,note:true,rest:false},
+      {id:"s3e027",nome:"Rest 1 min",timer:60,note:false,rest:true},
+      {id:"s3e028",nome:"Plate Pinch — 45s",timer:45,note:true,rest:false},
+      {id:"s3e029",nome:"Rest 1 min",timer:60,note:false,rest:true},
+      {id:"s3e030",nome:"Dumbbell Head Pinch — 45s",timer:45,note:true,rest:false},
+      {id:"s3e031",nome:"Rest 1 min",timer:60,note:false,rest:true},
+      {id:"s3e032",nome:"Farmer Carry — maxima distancia unbroken",sub:"Peso de prova. Registrar distancia.",timer:0,note:true,rest:false},
+    ],
+    s3s10:[
+      {id:"s3e033",nome:"SkiErg leve — 10 min",timer:600,note:false,rest:false},
+      {id:"s3e034",nome:"Descanso 3 min",timer:180,note:false,rest:true},
+    ],
+    s3s11:[
+      {id:"s3e035",nome:"1000m — pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e036",nome:"Rest 30s",timer:30,note:false,rest:true},
+      {id:"s3e037",nome:"300m — pace alvo",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e038",nome:"Rest 1 min",timer:60,note:false,rest:true},
+      {id:"s3e039",nome:"1000m — pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e040",nome:"Rest 30s",timer:30,note:false,rest:true},
+      {id:"s3e041",nome:"200m — 3-5s abaixo do pace alvo",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e042",nome:"Rest 30s",timer:30,note:false,rest:true},
+      {id:"s3e043",nome:"200m — 3-5s abaixo do pace alvo",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e044",nome:"Rest 1 min",timer:60,note:false,rest:true},
+      {id:"s3e045",nome:"1000m — pace dos 2km",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e046",nome:"Rest 30s",timer:30,note:false,rest:true},
+      {id:"s3e047",nome:"150m — 3-5s abaixo do pace alvo",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e048",nome:"Rest 30s",timer:30,note:false,rest:true},
+      {id:"s3e049",nome:"150m — 3-5s abaixo do pace alvo",timer:0,note:true,rest:false,pr:"ski"},
+      {id:"s3e050",nome:"Rest 10 min",timer:600,note:false,rest:true},
+    ],
+    s3s12:[
+      {id:"s3e051",nome:"Farmer Carry — maxima distancia unbroken",sub:"Peso de prova. Registrar distancia.",timer:0,note:true,rest:false},
+      {id:"s3e052",nome:"Acumular 3 min Farmer Carry",sub:"No maximo 5 quebras. Peso de prova.",timer:0,note:true,rest:false},
+    ],
+    s3s13:[{id:"s3e053",nome:"Corrida do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    s3s14:[
+      {id:"s3e054",nome:"3.500m a 22-24 SPM",timer:0,note:true,rest:false,pr:"remo"},
+      {id:"s3e055",nome:"Rest 3 min",timer:180,note:false,rest:true},
+      {id:"s3e056",nome:"3.500m a 22-24 SPM",timer:0,note:true,rest:false,pr:"remo"},
+      {id:"s3e057",nome:"Rest 10 min",timer:600,note:false,rest:true},
+    ],
+    s3s15:[
+      {id:"s3e058",nome:"Sled Pull — 3x30m",sub:"Peso de prova",timer:0,note:true,rest:false},
+      {id:"s3e059",nome:"Sled Push — 3x20m",sub:"Peso de prova",timer:0,note:true,rest:false},
+      {id:"s3e060",nome:"Deadlift",sub:"1x15@40% | 1x12@45% | 1x8@50% | 3x6@60%",timer:0,note:true,rest:false,pr:"deadlift",pcts:[40,45,50,60,60,60],reps:[15,12,8,6,6,6]},
+    ],
+    s3s16:[{id:"s3e061",nome:"Bike leve — 10 min",sub:"Baixa intensidade",timer:600,note:false,rest:false}],
+    s3s17:[
+      {id:"s3e062",nome:"Escada Row + Burpee",sub:"Ate falhar o minuto ou cap 20 min\nRd1: 10/7 cal + 6 burpee | Rd2: 11/8 cal + 7 burpee | ... | Rd15: 17/14 cal + 13 burpee",timer:1200,note:true,rest:false},
+      {id:"s3e063",nome:"Rest 5 min",timer:300,note:false,rest:true},
+    ],
+    s3s18:[
+      {id:"s3e064",nome:"A cada 2'30\" x 4 rounds",sub:"10 Squat Snatch H35/M25kg + 18/15 cal ski + Max rep Wall Ball\nRest 1'30\" entre rounds",timer:0,note:true,rest:false},
+      {id:"s3e065",nome:"Rest 5 min",timer:300,note:false,rest:true},
+    ],
+    s3s19:[
+      {id:"s3e066",nome:"EMOM 20 min",sub:"Min impar: 200m run | Min par: 8 devil deadlift",timer:1200,note:true,rest:false},
+    ],
+    s3s20:[{id:"s3e067",nome:"Longao do Kenny",sub:"Registrar distancia e pace medio.",timer:0,note:true,rest:false}],
+    s3s21:[
+      {id:"s3e068",nome:"Bike — 10s potencia maxima",timer:10,note:false,rest:false,pr:"assault"},
+      {id:"s3e069",nome:"3 jumps — saltar mais alto possivel",sub:"Explosivo",timer:0,note:false,rest:false},
+      {id:"s3e070",nome:"Descanso 3-5 min",sub:"Recuperacao completa",timer:240,note:false,rest:true},
+    ],
   },
   done:{},notes:{},
   prs:{camila01:{},kenny01:{},thiago01:{},darfine01:{}},
@@ -316,7 +520,7 @@ function SessaoBlock({ss,exs,db,update,prs,isCoach,diaId,idx,total,onMover,onDel
         {!isCoach&&feito&&<button onClick={()=>setFase("concluindo")} style={{padding:"6px 12px",fontSize:12,borderRadius:8,border:"1px solid #b5dcc7",background:"#edf7f2",color:"#2a7a4b",cursor:"pointer",fontWeight:600}}>Log</button>}
       </div>
     </div>
-    {!isCoach&&showDesc&&linhas.length>0&&(<div style={{padding:"0 14px 12px"}}>{linhas.map((l,i)=>{if(l.trim()==="")return<div key={i} style={{height:8}}/>;const isTit=l.startsWith("Bloco")||l.startsWith("Total")||l.startsWith("Por round")||l.startsWith("Min ");return(<div key={i} style={{fontSize:13,lineHeight:1.6,fontWeight:isTit?700:400,color:isTit?"#1a1a1a":"#555",marginTop:isTit?4:0}}>{l}</div>);})}</div>)}
+    {!isCoach&&showDesc&&linhas.length>0&&(<div style={{padding:"0 14px 12px"}}>{linhas.map((l,i)=>{if(l.trim()==="")return<div key={i} style={{height:8}}/>;const isTit=l.startsWith("Bloco")||l.startsWith("Total")||l.startsWith("Por round")||l.startsWith("Min ")||l.startsWith("Rd");return(<div key={i} style={{fontSize:13,lineHeight:1.6,fontWeight:isTit?700:400,color:isTit?"#1a1a1a":"#555",marginTop:isTit?4:0}}>{l}</div>);})}</div>)}
     {isCoach&&editDesc&&(<div style={{padding:"0 14px 14px"}}><textarea value={novaDesc} onChange={e=>setNovaDesc(e.target.value)} style={{...INP,height:160,resize:"vertical",fontSize:13,lineHeight:1.7,marginBottom:8}} placeholder="Descreva o treino..."/><div style={{display:"flex",gap:8}}><button style={BTNCANCEL} onClick={()=>setEditDesc(false)}>Cancelar</button><button style={BTNOK} onClick={salvarDesc}>Salvar</button></div></div>)}
     {isCoach&&!editDesc&&linhas.length>0&&(<div style={{padding:"0 14px 8px",fontSize:11,color:"#ccc",lineHeight:1.5,maxHeight:38,overflow:"hidden"}}>{ss.desc}</div>)}
     {(isCoach||fase==="ativa"||feito)&&(<div style={{padding:"0 14px",opacity:feito&&!isCoach?0.65:1}}>{exs.map(ex=>(<ExItem key={ex.id} ex={ex} note={db.notes["x"+ex.id]} prs={prs} isCoach={isCoach} onNote={v=>update(d=>{d.notes["x"+ex.id]=v;})} onEdit={(c,v)=>editarEx(ex.id,c,v)} onRemove={()=>removerEx(ex.id)}/>))}{exs.length===0&&!isCoach&&<div style={{padding:"12px 0",fontSize:13,color:"#ccc",fontStyle:"italic"}}>Sem exercicios cadastrados</div>}</div>)}
